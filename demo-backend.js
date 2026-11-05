@@ -4,7 +4,7 @@
 // Realtime (изменения и «кто в приложении»), фото, сотрудники, перенос в Excel-книгу (имитация раз в 25 с).
 (function () {
   "use strict";
-  const DB_KEY = "rzd_db_v1", AUTH_KEY = "rz_auth", PIN = "1111";
+  const DB_KEY = "rzd_db_v2", AUTH_KEY = "rz_auth", PIN = "1111";
   const SITES = ["Северный", "Южный"];
   const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : "x" + Date.now().toString(36) + Math.random().toString(36).slice(2));
   const iso = (t) => new Date(t).toISOString();
@@ -46,7 +46,8 @@
       "Диагностика": ["Диагностика с помощью сканера", "Диагностика электрооборудования", "Диагностика гидравлической системы"],
     };
     const DUR = { "Ремонт": [1.2, 9], "ТО": [5, 10], "Долив": [0.3, 1], "Диагностика": [0.7, 3] };
-    const WAITS = ["Нет водителя", "Распоряжение диспетчера", "Пересменка / обед"];
+    const READY = ["Ожидание водителя", "Ожидание оператора", "Распоряжение диспетчера", "Пересменка / обед"];   // машина исправна, ждёт
+    const EXT = ["Ожидание запчастей / масла", "Ожидание тягача", "Ожидание мойки ДВС", "Отогрев и запуск после ШРУ"];   // задержка ремонта
     const jobs = [], now = Date.now();
     const bySite = (site) => ({ mech: staff.filter((s) => s.site === site && s.role === "mechanic"), cars: site === "Северный" ? machines.slice(0, 22) : machines.slice(22) });
     const busy = new Map();   // машина -- до какого времени занята (без наложений)
@@ -56,8 +57,9 @@
       if (!gar) return null;
       const m = pick(mech), [a, b] = DUR[kind];
       let len = between(a, b) * H; if (kind === "Ремонт" && R() < 0.07) len = between(18, 40) * H;   // редкий долгострой
-      const wait = !opts.open && kind !== "Долив" && R() < 0.22 ? between(0.3, 3.2) * H : 0;
-      const end = opts.open ? null : start + len + wait;
+      const wait = !opts.open && kind !== "Долив" && R() < 0.24 ? between(0.4, 3.2) * H : 0;     // после ремонта: исправна, ждёт
+      const extD = !opts.open && kind === "Ремонт" && R() < 0.18 ? between(0.5, 4) * H : 0;      // во время ремонта: запчасти, тягач…
+      const end = opts.open ? null : start + len + extD + wait;
       busy.set(gar, end || Infinity);
       const ws = [...new Set([pick(workers).name, ...(R() < 0.5 ? [pick(workers).name] : [])])];
       const work = pick(WORK[kind]);
@@ -67,8 +69,12 @@
         started_at: iso(start), ended_at: end ? iso(end) : null, fault: pick(FAULTS[kind]), work: end || R() < 0.5 ? work : "",
         moto: Math.round(between(8000, 42000)), tmc: kind === "ТО" ? "Фильтр масляный — 2 шт.\nФильтр топливный — 2 шт." : "", note: "",
         mechanic_id: m.id, mechanic_name: m.name, deleted: false, deleted_at: null, deleted_by: null, was_imported: false,
-        ready_at: wait ? iso(start + len) : opts.ready ? iso(now - opts.ready) : null,
-        wait_reason: wait || opts.ready ? pick(WAITS) : null, crew: ws.length, workers: ws,
+        ready_at: null, wait_reason: null, crew: ws.length, workers: ws,
+        idle: [
+          ...(extD ? [{ u: uuid().slice(0, 8), r: pick(EXT), from: iso(start + len * 0.4), to: iso(start + len * 0.4 + extD), n: "" }] : []),
+          ...(wait ? [{ u: uuid().slice(0, 8), r: pick(READY), from: iso(start + len + extD), to: iso(end), n: "" }] : []),
+          ...(opts.ready ? [{ u: uuid().slice(0, 8), r: pick(READY), from: iso(now - opts.ready), to: null, n: "" }] : []),
+        ],
         steps: end ? [{ t: work, from: `${p2(from.getHours())}:${p2(from.getMinutes())}`, to: to ? `${p2(to.getHours())}:${p2(to.getMinutes())}` : "", who: ws }] : null,
         inspect: kind === "ТО" && end ? { ac: "ok", pzd: "ok", ansul: "ok", heat: R() < 0.2 ? "bad" : "ok", uspvl: "ok", lv: "1,2", ln: "1,1", pv: "1,3", pn: "1,2" } : null,
         rev: 1 + Math.floor(R() * 3), imported_rev: 0, imported_at: null,
@@ -89,7 +95,7 @@
           if (start > now - 2 * H) continue;
           const j = job(site, start, KIND());
           if (j && j.ended_at && new Date(j.ended_at) > now) {   // ещё не закончилась -- открыта
-            j.ended_at = null; j.work = ""; j.steps = null; j.ready_at = null; j.wait_reason = null; j.imported_rev = 0; j.imported_at = null;
+            j.ended_at = null; j.work = ""; j.steps = null; j.idle = []; j.imported_rev = 0; j.imported_at = null;
           }
         }
       }
@@ -133,11 +139,11 @@
   const visibleJob = (j) => { const m = me(); return !!m && j.site === m.site; };
 
   // ---------- правила записи jobs (как триггер на сервере) ----------
-  const BIZ = ["gar", "kind", "started_at", "ended_at", "fault", "work", "moto", "tmc", "note", "deleted", "mechanic_id", "ready_at", "wait_reason", "crew", "workers"];
+  const BIZ = ["gar", "kind", "started_at", "ended_at", "fault", "work", "moto", "tmc", "note", "deleted", "mechanic_id", "ready_at", "wait_reason", "crew", "workers", "idle"];
   const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
   function jobInsert(row) {
     const m = me(), now = iso(Date.now());
-    const j = { id: uuid(), deleted: false, steps: null, inspect: null, workers: null, crew: null, ...row };
+    const j = { id: uuid(), deleted: false, steps: null, inspect: null, workers: null, crew: null, idle: null, ...row };
     if (!j.mechanic_id || m?.role !== "admin") j.mechanic_id = m?.id;
     j.mechanic_name = db.staff.find((s) => s.id === j.mechanic_id)?.name || null;
     j.site = m?.site || j.site; j.rev = 1; j.imported_rev = 0; j.imported_at = null; j.was_imported = false;
@@ -373,7 +379,7 @@
   const DEMO = window.REMZONA_DEMO = {
     live: localStorage.getItem("rzd_live") !== "0",
     setLive(v) { this.live = v; localStorage.setItem("rzd_live", v ? "1" : "0"); },
-    reset() { localStorage.removeItem(DB_KEY); localStorage.removeItem(AUTH_KEY); ["rz_me", "rz_jobs", "rz_queue", "rz_machines", "rz_workers", "rz_pick", "rz_seen", "rz_price", "rz_shift"].forEach((k) => localStorage.removeItem(k)); location.reload(); },
+    reset() { localStorage.removeItem(DB_KEY); localStorage.removeItem(AUTH_KEY); ["rz_me", "rz_jobs", "rz_queue", "rz_machines", "rz_workers", "rz_pick", "rz_seen", "rz_price", "rz_shift", "rz_ana"].forEach((k) => localStorage.removeItem(k)); location.reload(); },
     accounts: () => db.staff.filter((s) => s.active).map((s) => ({ ...login(s), site: s.site })),
     pin: PIN,
   };
@@ -391,13 +397,14 @@
       const j = { id: uuid(), client_id: "app:" + uuid(), gar: c.gar, kind, area: "Площадка", site: m.site, started_at: iso(Date.now() - 4 * MIN),
         ended_at: null, fault: kind === "Долив" ? "Долив масла ДВС" : ["Течь по РВД", "Не работает фара", "Ошибка датчика давления", "Стук при повороте"][Math.floor(R() * 4)],
         work: "", moto: Math.round(10000 + R() * 30000), tmc: "", note: "", mechanic_id: who.id, mechanic_name: who.name, deleted: false, deleted_at: null, deleted_by: null,
-        was_imported: false, ready_at: null, wait_reason: null, crew: null, workers: null, steps: null, inspect: null, rev: 1, imported_rev: 0, imported_at: null, created_at: nowI, updated_at: nowI };
+        was_imported: false, ready_at: null, wait_reason: null, crew: null, workers: null, idle: null, steps: null, inspect: null, rev: 1, imported_rev: 0, imported_at: null, created_at: nowI, updated_at: nowI };
       db.jobs.push(j); emit("jobs", "INSERT", j);
     } else {
       if (!theirs.length) return;
       const j = theirs[Math.floor(R() * theirs.length)], o = { ...j };
-      if (!j.ready_at && R() < 0.35 && j.kind !== "Долив") { j.ready_at = nowI; j.wait_reason = ["Нет водителя", "Распоряжение диспетчера"][Math.floor(R() * 2)]; }
-      else { j.ended_at = nowI; j.work = j.kind === "Долив" ? "Доливка масла" : "Замена уплотнения"; j.workers = [db.workers[Math.floor(R() * db.workers.length)].name]; j.crew = 1; }
+      const go = (j.idle || []).find((x) => !x.to);
+      if (!go && R() < 0.35 && j.kind !== "Долив") j.idle = [...(j.idle || []), { u: uuid().slice(0, 8), r: ["Ожидание водителя", "Распоряжение диспетчера"][Math.floor(R() * 2)], from: nowI, to: null, n: "" }];
+      else { if (go) go.to = nowI; j.ended_at = nowI; j.work = j.kind === "Долив" ? "Доливка масла" : "Замена уплотнения"; j.workers = [db.workers[Math.floor(R() * db.workers.length)].name]; j.crew = 1; }
       j.rev++; j.updated_at = nowI; j.mechanic_id = j.mechanic_id || who.id; emit("jobs", "UPDATE", j, o);
     }
     persist();

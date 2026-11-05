@@ -191,7 +191,7 @@ main:has(.fab) ~ #toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
 label.f { display: block; margin: 22px 16px 7px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .02em; }
 .inp { width: 100%; min-height: 44px; border: 0; border-radius: 10px; padding: 11px 16px; background: var(--card); font-size: 17px; color: var(--text); }
 .inp::placeholder { color: var(--muted2); }
-textarea.inp { min-height: 96px; resize: vertical; line-height: 1.35; }
+textarea.inp { min-height: 137px; resize: vertical; line-height: 1.35; }
 .inp:focus { outline: 0; }
 .inp:disabled { color: var(--muted); opacity: 1; }
 /* выбор: «таблетки»; одиночный выбор (вид работ, роль, участок) -- сегменты */
@@ -325,7 +325,23 @@ details.more[open] summary::after { transform: rotate(-135deg); margin-top: 4px;
 .work .wh .iconbtn { margin: 0 -10px 0 auto; width: 40px; height: 40px; font-size: 17px; color: var(--muted); }
 .work label.f { margin: 14px 0 6px; }
 .work .inp { background: var(--chip); }
-.work textarea.inp { min-height: 96px; }
+.work textarea.inp { min-height: 137px; }
+/* простои не по нашей вине: строка в карточке и отдельный экран (макет «Простои», вариант Б) */
+.panel[hidden] { display: none; }
+.idlesum { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; cursor: pointer; }
+.idlesum .t { flex: 1; min-width: 0; }
+.idlesum .t small { display: block; font-size: 13px; color: var(--muted); }
+.idlesum .d { font-size: 15px; font-weight: 600; color: var(--amber); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.idlerow { display: flex; align-items: center; gap: 10px; min-height: 52px; cursor: pointer; }
+.idlerow .t { flex: 1; min-width: 0; }
+.idlerow .t b { display: block; font-size: 15px; font-weight: 600; color: var(--strong); }
+.idlerow .t small { display: block; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.idlerow .d { font-size: 15px; font-weight: 600; color: var(--amber); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.idlerow .d.go { color: var(--red); }
+.idlelab { font-size: 13px; color: var(--muted); margin: 12px 0 6px; }
+.idlebtns { display: flex; gap: 8px; margin-top: 12px; } .idlebtns .btn { flex: 1; }
+.idletot { display: flex; justify-content: space-between; margin: 10px 16px 0; font-size: 15px; color: var(--muted); }
+.idletot b { color: var(--strong); font-variant-numeric: tabular-nums; }
 .work .pnote { margin-left: 0; }
 .tmw { display: grid; gap: 8px; }
 .tmw .cell { display: flex; align-items: center; gap: 8px; min-width: 0; }
@@ -360,15 +376,7 @@ details.more[open] summary::after { transform: rotate(-135deg); margin-top: 4px;
 .tclear { display: block; width: calc(100% - 32px); margin: 0 16px 12px; border: 0; background: var(--chip); color: var(--red); border-radius: 12px;
   min-height: 44px; font-size: 17px; cursor: pointer; }
 .tclear[hidden] { display: none; }
-/* ---------- демо и аналитика ---------- */
-.demo { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 10px 0 0; padding: 8px 12px; border-radius: 10px;
-  background: var(--red-soft); color: var(--text); font-size: 13px; }
-.demo b { color: var(--red); }
-.demo .grow { flex: 1; min-width: 160px; }
-.demo button { border: 0; background: var(--card); color: var(--red); border-radius: 8px; min-height: 32px; padding: 4px 10px; font-size: 13px; cursor: pointer; }
-.demoacc { margin-top: 18px; text-align: left; }
-.demoacc h3 { font-size: 13px; font-weight: 400; text-transform: uppercase; color: var(--muted); margin: 14px 4px 6px; }
-.demoacc .names button small { color: var(--muted); font-size: 13px; white-space: nowrap; margin-left: 8px; }
+/* ---------- аналитика (администратор): КТГ, простои, повторные ремонты ---------- */
 .kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 @media (min-width: 560px) { .kpis { grid-template-columns: repeat(4, 1fr); } }
 .kpi { background: var(--card); border-radius: 12px; padding: 12px 14px; min-width: 0; }
@@ -388,14 +396,23 @@ details.more[open] summary::after { transform: rotate(-135deg); margin-top: 4px;
 .hb .bar { height: 10px; border-radius: 0 4px 4px 0; background: var(--chip); overflow: hidden; }
 .hb .bar i { display: block; height: 100%; background: var(--red); border-radius: 0 4px 4px 0; }
 .hb .val { font-variant-numeric: tabular-nums; color: var(--text); font-size: 14px; white-space: nowrap; }
+.hb.wide { grid-template-columns: 1fr auto; }
+.hb.wide .t { grid-column: 1 / -1; white-space: normal; }
 .anote { font-size: 13px; color: var(--muted); margin: 8px 2px 0; }
 .calc { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; align-items: end; }
 .calc label { font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
-.calc .inp { margin: 0; }
+.calc .inp { margin: 0; background: var(--chip); }
 .how { background: var(--card); border-radius: 12px; padding: 12px 14px; margin-top: 8px; font-size: 14px; }
 .how summary { cursor: pointer; color: var(--red); }
 .how p { margin: 8px 0 0; line-height: 1.45; }
-.kpi .v small { font-size: 15px; font-weight: 600; }
+.demo { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 10px 0 0; padding: 8px 12px; border-radius: 10px;
+  background: var(--red-soft); color: var(--text); font-size: 13px; }
+.demo b { color: var(--red); }
+.demo .grow { flex: 1; min-width: 160px; }
+.demo button { border: 0; background: var(--card); color: var(--red); border-radius: 8px; min-height: 32px; padding: 4px 10px; font-size: 13px; cursor: pointer; }
+.demoacc { margin-top: 18px; text-align: left; }
+.demoacc h3 { font-size: 13px; font-weight: 400; text-transform: uppercase; color: var(--muted); margin: 14px 4px 6px; }
+.demoacc .names button small { color: var(--muted); font-size: 13px; white-space: nowrap; margin-left: 8px; }
 </style>
 </head>
 <body>
@@ -407,7 +424,7 @@ details.more[open] summary::after { transform: rotate(-135deg); margin-top: 4px;
 </header>
 <div id="splash" aria-hidden="true"><div class="sp"><img class="logo" src="logo.png" alt=""><div class="bar"><i></i></div><div class="t">Ремзона</div></div></div>
 <main id="app"></main>
-<div id="sheet" hidden><div class="panel" id="panel"></div></div>
+<div id="sheet" hidden><div class="panel" id="panel"></div><div class="panel" id="idlePanel" hidden></div></div>
 <div id="tpick" hidden><div class="tsheet"><div class="tbar"><button class="nb" data-act="tpcancel">Отмена</button><b id="tpTitle"></b><button class="nb r" data-act="tpdone">Готово</button></div>
   <div class="wheels" id="wheels"></div><button class="tclear" id="tpClear" data-act="tpclear" hidden>Очистить</button></div></div>
 <div id="pview" hidden></div>
@@ -421,13 +438,18 @@ details.more[open] summary::after { transform: rotate(-135deg); margin-top: 4px;
 // демо-версия: облачной базы нет, запросы обрабатывает demo-backend.js в этом браузере
 const SB_URL = "demo", SB_KEY = "demo";
 const KINDS = ["Ремонт", "ТО", "Долив", "Диагностика"];
-const WAITS = ["Нет водителя", "Распоряжение диспетчера", "Пересменка / обед"];   // готова, ждёт не по нашей вине; + «Другое» текстом
-// участки: каждый видит работы своего участка (ограничение на сервере), участок меняет сам; в книгу Excel -- только Севернытный
+// простой не по нашей вине: интервалы в jobs.idle [{u, r, from, to, n}]; расчёт -- в аналитике. Прежние ready_at, wait_reason сохраняются и показываются
+const IDLE = ["Ожидание водителя", "Ожидание оператора", "Ожидание тягача", "Ожидание запчастей / масла", "Ожидание мойки ДВС", "Распоряжение диспетчера", "Пересменка / обед", "Отогрев и запуск после ШРУ", "Другое"];
+const idleOf = (j) => (Array.isArray(j?.idle) ? j.idle : []);
+const idleMin = (x) => (x.to ? Math.max(0, Math.floor(new Date(x.to) / 60000) - Math.floor(new Date(x.from) / 60000)) : 0);
+const idleSum = (list) => list.reduce((s, x) => s + idleMin(x), 0);
+const minTxt = (m) => (m >= 60 ? `${Math.floor(m / 60)} ч ${m % 60} мин` : `${m} мин`);
+// участки: каждый видит работы своего участка (ограничение на сервере), участок меняет сам; в книгу Excel -- только Северный
 const SITES = ["Северный", "Южный"], EXCEL_SITE = "Северный";
-const CREDIT = `<div class="credit">Разработчик — Умаров Р.К.</div>`;   // подпись создателя (решение пользователя 31.10.2026)
+const CREDIT = `<div class="credit">Разработчик — Умаров Р.К.</div>`;   // подпись создателя
 const DAY_START = 7, NIGHT_START = 19;          // смены: 1 -- ночь 19:00–7:00 (дата окончания), 2 -- день
 const KEEP_DAYS = 3;                            // закрытые записи в ленте -- за последние сутки×3
-const LONG_MS = 24 * 3600000;                   // долгострой (01.11.2026, решение пользователя): на площадке дольше суток -- в отдельном окне
+const LONG_MS = 24 * 3600000;                   // долгострой: на площадке дольше суток -- в отдельном окне
 // вкладка записи (jobs.area): откуда создана, не по виду работ -- на ТО бывают доливы и ремонты; запись без area (кэш до обновления) -- по виду
 const areaOf = (j) => j.area || (j.kind === "ТО" ? "ТО" : "Площадка");
 
@@ -499,7 +521,7 @@ function shiftOf(t = new Date()) {
     const n = new Date(d); n.setHours(0, 0, 0, 0); return { date: n, n: 1, start: st }; }
   const st = new Date(d); st.setHours(DAY_START, 0, 0, 0); const n = new Date(d); n.setHours(0, 0, 0, 0); return { date: n, n: 2, start: st };
 }
-// свою смену механик выбирает сам (30.10.2026, решение пользователя: на пересменке ночной видит свою) -- rz_shift = начало
+// свою смену механик выбирает сам -- rz_shift = начало
 // выбранной; выбор действует от 4 ч до её начала до 4 ч после конца, дальше -- снова по часам. В книгу смена не идёт.
 const SHIFT_LEN = 12 * 3600000, SHIFT_SLACK = 4 * 3600000;
 function myShift(now = new Date()) {
@@ -846,24 +868,9 @@ async function enter() {
   pushOn(false).then(render, () => {});
 }
 
-// ---------- демо-версия: панель и вход в один тап ----------
-function demoBar() {
-  const D = window.REMZONA_DEMO; if (!D) return "";
-  return `<div class="demo"><span class="grow"><b>Демо</b> · данные вымышленные</span>
-    <button data-act="demolive">Коллеги: ${D.live ? "вкл" : "выкл"}</button><button data-act="demoreset">Сбросить</button></div>`;
-}
-function demoLogin() {
-  const D = window.REMZONA_DEMO; if (!D) return "";
-  const acc = D.accounts().filter((a) => a.site === SITES[0]);
-  const row = (a) => `<button data-act="pick" data-login="${esc(a.login)}">${esc(a.name)}<small>${a.role === "admin" ? "администратор" : "механик"} ›</small></button>`;
-  return `<div class="demoacc"><div class="demo"><span class="grow"><b>Демо-версия.</b> Выберите учётную запись — PIN <b>${D.pin}</b>. Данные вымышленные.</span></div>
-    <h3>Администратор — лента, аналитика, люди</h3><div class="names">${acc.filter((a) => a.role === "admin").map(row).join("")}</div>
-    <h3>Механик — заезды с телефона</h3><div class="names">${acc.filter((a) => a.role !== "admin").map(row).join("")}</div></div>`;
-}
-
-// ---------- аналитика (администратор): заезды, время ремонта, простой не по нашей вине ----------
+// ---------- аналитика (администратор): КТГ, работа ремзоны и простой не по нашей вине ----------
 // данные -- записи участка за 7 / 30 суток (отдельный запрос: в ленте только последние сутки×3)
-const ANA = { days: 30, rows: null, at: 0, err: "", sel: null };
+const ANA = { days: 30, rows: null, at: 0, err: "", sel: null, wait: 0 };
 async function loadAna() {
   const since = new Date(Date.now() - ANA.days * 86400000); since.setHours(0, 0, 0, 0);
   const { data, error } = await sb.from("jobs").select("*").eq("deleted", false).eq("site", S.me.site).gte("started_at", since.toISOString())
@@ -874,23 +881,34 @@ async function loadAna() {
 }
 const hrs = (ms) => ms / 3600000;
 const f1 = (x) => (Math.round(x * 10) / 10).toLocaleString("ru-RU");
-// Время машины на ремзоне делится на две части (как в методике учёта времени горной техники GMG и в определении КТГ):
-//   ремонт  -- от заезда до готовности (или до выезда, если «готова» не отмечали): машина неисправна, это простой ремзоны;
-//   ожидание -- от «готова» до выезда: машина исправна, но не уходит (нет водителя, распоряжение диспетчера…) -- организационный простой.
-// КТГ = 1 − часы ремонта / календарные часы парка. Исправная машина в ожидании -- технически готова (в КТГ не вычитается).
-// Парк по умолчанию -- машины, заезжавшие на ремзону за период; число можно поправить (сохраняется в телефоне).
+// Время машины на ремзоне (заезд -> выезд) делится на три части, как в отраслевой методике учёта времени горной техники (GMG):
+//   работа ремзоны      -- время на площадке минус отмеченные простои не по нашей вине;
+//   внешние задержки    -- простой не по нашей вине, когда машина ещё неисправна (запчасти, тягач, мойка, отогрев, другое);
+//   исправна, ждёт      -- простой, когда машина исправна (водитель, оператор, диспетчер, пересменка): по определению КТГ она готова.
+// КТГ = 1 − (работа ремзоны + внешние задержки) / (машин в парке × часов периода). Прежние записи без jobs.idle -- ready_at → выезд.
+const IDLE_READY = ["Ожидание водителя", "Ожидание оператора", "Распоряжение диспетчера", "Пересменка / обед", "Нет водителя"];
 function anaCalc(js, from, to) {
   const clip = (a, b) => Math.max(0, Math.min(b, to) - Math.max(a, from));
-  const per = new Map();   // машина -> { rep, wait, n, nRep, last }
+  const per = new Map(), reasons = new Map(), repOf = new Map();
   for (const j of js) {
-    const s = +new Date(j.started_at), e = j.ended_at ? +new Date(j.ended_at) : to, r = j.ready_at ? Math.min(+new Date(j.ready_at), e) : e;
-    const o = per.get(j.gar) || { gar: j.gar, rep: 0, wait: 0, n: 0, reps: [] };
-    o.rep += clip(s, r); o.wait += clip(r, e); o.n++;
+    const s = +new Date(j.started_at), e = j.ended_at ? +new Date(j.ended_at) : to;
+    let iv = idleOf(j).map((x) => ({ r: x.r || "Другое", a: +new Date(x.from), b: x.to ? +new Date(x.to) : e }));
+    if (!iv.length && j.ready_at) iv = [{ r: j.wait_reason || "Другое", a: +new Date(j.ready_at), b: e }];
+    let ready = 0, ext = 0;
+    for (const x of iv) {
+      const d = clip(Math.max(x.a, s), Math.min(x.b, e)); if (!d) continue;
+      if (IDLE_READY.includes(x.r)) ready += d; else ext += d;
+      const o = reasons.get(x.r) || { t: x.r, v: 0, n: 0, ready: IDLE_READY.includes(x.r) }; o.v += d / 3600000; o.n++; reasons.set(x.r, o);
+    }
+    const stay = clip(s, e), idle = Math.min(stay, ready + ext);
+    const o = per.get(j.gar) || { gar: j.gar, rep: 0, ext: 0, ready: 0, n: 0, reps: [] };
+    o.rep += stay - idle; o.ext += Math.min(ext, idle); o.ready += idle - Math.min(ext, idle); o.n++;
     if (j.kind === "Ремонт") o.reps.push(j);
     per.set(j.gar, o);
+    repOf.set(j.id, Math.max(0, stay - idle));   // для среднего времени работ (без простоев)
   }
-  const cars = [...per.values()], rep = cars.reduce((a, c) => a + c.rep, 0), wait = cars.reduce((a, c) => a + c.wait, 0);
-  return { cars, rep, wait };
+  const cars = [...per.values()], sum = (k) => cars.reduce((a, c) => a + c[k], 0);
+  return { cars, rep: sum("rep"), ext: sum("ext"), ready: sum("ready"), reasons: [...reasons.values()].sort((a, b) => b.v - a.v), repOf };
 }
 function anaHtml() {
   const per = `<div class="seg two" style="margin-top:10px">${[7, 30].map((d) => `<button class="${ANA.days === d ? "on" : ""}" data-act="anaper" data-v="${d}">${d} суток</button>`).join("")}</div>`;
@@ -901,13 +919,14 @@ function anaHtml() {
   if (!js.length) return `${per}<div class="empty" style="margin-top:12px">За период записей нет</div>`;
   const C = anaCalc(js, ANA.at, now), saved = load("rz_ana", {});
   const fleet = Math.max(1, +saved["fleet_" + S.me.site] || C.cars.length), cal = fleet * (now - ANA.at);
-  const ktg = 1 - C.rep / cal, ktgOld = 1 - (C.rep + C.wait) / cal, pct = (x) => `${f1(x * 100)}<small>%</small>`;
+  const ktg = 1 - (C.rep + C.ext) / cal, ktgOld = 1 - (C.rep + C.ext + C.ready) / cal, pct = (x) => `${f1(x * 100)}<small>%</small>`;
+  const notOurs = C.ext + C.ready;
   const kpi = (v, l) => `<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`;
   let h = `${per}<h2>Готовность парка · ${ANA.days} суток · ${esc(S.me.site)}</h2><div class="kpis">
-    ${kpi(pct(ktg), "КТГ по методике: ожидание исправной машины не вычитается")}
-    ${kpi(pct(ktgOld), "КТГ, если ожидание записывать ремзоне")}
-    ${kpi(`+${f1((ktg - ktgOld) * 100)} <small>п.п.</small>`, "разница: столько готовности терялось в учёте")}
-    ${kpi(`${f1(hrs(C.wait))} <small>ч</small>`, "исправная техника ждала не по вине ремзоны")}</div>
+    ${kpi(pct(ktg), "КТГ по методике: исправная машина в ожидании — готова")}
+    ${kpi(pct(ktgOld), "КТГ, если всё время на площадке считать неисправностью")}
+    ${kpi(`${f1(hrs(notOurs))} <small>ч</small>`, `простой не по вине ремзоны · ${Math.round(notOurs / Math.max(1, C.rep + notOurs) * 100)}% времени на площадке`)}
+    ${kpi(`${f1(hrs(C.ready))} <small>ч</small>`, "из них машина исправна и ждёт (водитель, диспетчер…)")}</div>
     <div class="chart" style="margin-top:8px"><div class="calc"><label>Машин в парке участка
       <input class="inp" id="anaFleet" inputmode="numeric" value="${fleet}"></label><span class="anote" style="margin:0">по умолчанию — заезжавшие на ремзону за период (${C.cars.length})</span></div></div>`;
 
@@ -920,35 +939,30 @@ function anaHtml() {
     <div class="cols" role="img" aria-label="Заезды по суткам">${days.map((x, i) => `<button class="${ANA.sel === i ? "on" : ""}" data-act="anabar" data-i="${i}" title="${dm(x.d)}: ${x.n}"><i style="height:${x.n / mx * 100}%"></i></button>`).join("")}</div>
     <div class="axis"><span>${dm(days[0].d)}</span><span>${dm(days[days.length - 1].d)}</span></div></div>`;
 
-  const bars = (items, fmtV) => { const m = Math.max(...items.map((x) => x.v), 0.0001);
-    return items.map((x) => `<div class="hb"><span class="t" title="${esc(x.t + (x.m ? " · " + x.m : ""))}">${esc(x.t)}${x.m ? ` <small>${esc(x.m)}</small>` : ""}</span><span class="bar"><i style="width:${Math.max(2, x.v / m * 100)}%"></i></span><span class="val">${fmtV(x)}</span></div>`).join(""); };
+  const bars = (items, fmtV, wide) => { const m = Math.max(...items.map((x) => x.v), 0.0001);
+    return items.map((x) => `<div class="hb${wide ? " wide" : ""}"><span class="t" title="${esc(x.t + (x.m ? " · " + x.m : ""))}">${esc(x.t)}${x.m ? ` <small>${esc(x.m)}</small>` : ""}</span><span class="bar"><i style="width:${Math.max(2, x.v / m * 100)}%"></i></span><span class="val">${fmtV(x)}</span></div>`).join(""); };
 
-  // ожидание по причинам
-  const reasons = new Map();
-  for (const j of js) if (j.ready_at) {
-    const r = j.wait_reason || "Другое", e = j.ended_at ? +new Date(j.ended_at) : now, w = Math.max(0, Math.min(e, now) - Math.max(+new Date(j.ready_at), ANA.at));
-    const o = reasons.get(r) || { t: r, v: 0, n: 0 }; o.v += hrs(w); o.n++; reasons.set(r, o);
-  }
-  const rs = [...reasons.values()].sort((a, b) => b.v - a.v);
-  h += `<h2>Готова, но ждёт — по причинам</h2><div class="chart">${rs.length ? bars(rs, (x) => `${f1(x.v)} ч · ${x.n}`) : `<div class="cap">За период ожиданий не отмечено. Отмечайте «Готова к выезду» в карточке — иначе это время считается ремонтом</div>`}</div>`;
+  // простои по причинам
+  const rs = C.reasons.map((x) => ({ ...x, m: x.ready ? "исправна, ждёт" : "задержка ремонта" }));
+  h += `<h2>Простой не по нашей вине — по причинам</h2><div class="chart">${rs.length ? bars(rs, (x) => `${f1(x.v)} ч · ${x.n}`, true) : `<div class="cap">За период простоев не отмечено. Отмечайте их в карточке («Простой не по нашей вине») — иначе это время считается работой ремзоны</div>`}</div>`;
 
   // калькулятор: часы ожидания -> недовезённые тонны -> рубли (свои цифры предприятия)
   const tph = +saved.tph || 0, rub = +saved.rub || 0;
-  h += `<h2>Цена ожидания</h2><div class="chart" id="anaCalc"><div class="calc">
+  h += `<h2>Цена простоя не по нашей вине</h2><div class="chart" id="anaCalc"><div class="calc">
     <label>Тонн в час на машину<input class="inp" id="anaTph" inputmode="decimal" value="${tph || ""}" placeholder="например, 250"></label>
     <label>₽ за тонну (маржа)<input class="inp" id="anaRub" inputmode="decimal" value="${rub || ""}" placeholder="например, 120"></label></div>
     <div class="cap" id="anaOut" style="margin-top:8px"></div>
-    <div class="anote">${f1(hrs(C.wait))} ч ожидания × тонн в час × ₽ за тонну. Цифры — ваши, хранятся только в этом телефоне</div></div>`;
+    <div class="anote">${f1(hrs(notOurs))} ч простоя × тонн в час × ₽ за тонну. Цифры — ваши, хранятся только в этом телефоне</div></div>`;
 
   // время работ по видам
-  const closed = js.filter((j) => j.ended_at), repair = (j) => new Date(j.ready_at || j.ended_at) - new Date(j.started_at);
+  const closed = js.filter((j) => j.ended_at), repair = (j) => C.repOf.get(j.id) || 0;
   const kinds = KINDS.map((k) => { const xs = closed.filter((j) => j.kind === k); return { t: k, n: xs.length, v: xs.length ? hrs(xs.reduce((a, j) => a + repair(j), 0) / xs.length) : 0 }; }).filter((x) => x.n);
-  h += `<h2>Среднее время работ по видам</h2><div class="chart">${bars(kinds, (x) => `${f1(x.v)} ч · ${x.n}`)}<div class="anote">от заезда до готовности; справа — число закрытых записей</div></div>`;
+  h += `<h2>Среднее время работ по видам</h2><div class="chart">${bars(kinds, (x) => `${f1(x.v)} ч · ${x.n}`)}<div class="anote">работа ремзоны: время на площадке без простоев не по нашей вине; справа — число закрытых записей</div></div>`;
 
   // машины с низшим КТГ
   const span = now - ANA.at, model = (g) => S.machines.find((c) => c.gar === g)?.model || "";
-  const worst = [...C.cars].sort((a, b) => b.rep - a.rep).slice(0, 6).map((c) => ({ t: c.gar, m: model(c.gar), v: hrs(c.rep), k: 1 - c.rep / span, n: c.n }));
-  h += `<h2>Меньше всего готовности</h2><div class="chart">${bars(worst, (x) => `КТГ ${Math.round(x.k * 100)}% · ${f1(x.v)} ч`)}<div class="anote">часы в ремонте за период; КТГ машины — доля времени, когда она была исправна</div></div>`;
+  const worst = [...C.cars].sort((a, b) => b.rep + b.ext - a.rep - a.ext).slice(0, 6).map((c) => ({ t: c.gar, m: model(c.gar), v: hrs(c.rep + c.ext), k: 1 - (c.rep + c.ext) / span, n: c.n }));
+  h += `<h2>Меньше всего готовности</h2><div class="chart">${bars(worst, (x) => `КТГ ${Math.round(x.k * 100)}% · ${f1(x.v)} ч`)}<div class="anote">часы неисправности за период (работа ремзоны и задержки ремонта); КТГ машины — доля времени, когда она была исправна</div></div>`;
 
   // повторные заезды: машина снова в ремонте в течение 72 ч после выезда -- признак незакрытой причины
   const again = [];
@@ -966,11 +980,12 @@ function anaHtml() {
   const xl = js.filter((j) => j.site === EXCEL_SITE), inXl = xl.filter((j) => j.imported_rev > 0 && j.imported_rev >= j.rev).length;
   h += `<h2>Смены и Excel-книга</h2><div class="kpis">${kpi(night, "заездов ночью")}${kpi(js.length - night, "заездов днём")}
     ${S.me.site === EXCEL_SITE ? kpi(`${inXl} <small>из ${xl.length}</small>`, "перенесено в Excel-книгу") : ""}${kpi(js.filter((j) => !j.ended_at).length, "сейчас на ремзоне")}</div>
-    <details class="how"><summary>Как считается</summary><p><b>КТГ</b> (коэффициент технической готовности) = 1 − часы ремонта ÷ (машин в парке × часов в периоде).
-    <b>Ремонт</b> — от заезда до отметки «Готова к выезду», а если её нет — до выезда. <b>Ожидание</b> — от «Готова» до выезда: машина исправна,
-    поэтому по определению КТГ она технически готова. Так же разделяет время отраслевая методика учёта времени горной техники (GMG Time Usage Model):
-    простой в ремонте и ожидание исправной машины — разные категории.</p></details>`;
-  ANA.wait = C.wait;
+    <details class="how"><summary>Как считается</summary><p><b>КТГ</b> (коэффициент технической готовности) = 1 − часы неисправности ÷ (машин в парке × часов в периоде).
+    Время на площадке делится на три части: <b>работа ремзоны</b> — всё, кроме отмеченных простоев; <b>задержки ремонта</b> — простой не по нашей вине,
+    пока машина неисправна (запчасти, тягач, мойка, отогрев, другое); <b>исправна, ждёт</b> — водитель, оператор, диспетчер, пересменка.
+    Исправная машина в ожидании по определению КТГ технически готова. Так же разделяет время отраслевая методика учёта времени горной техники
+    (GMG Time Usage Model): простой в ремонте и ожидание исправной машины — разные категории.</p></details>`;
+  ANA.wait = notOurs;
   return h;
 }
 function anaBind() {
@@ -988,6 +1003,21 @@ function anaBind() {
 }
 const dayTitleTxt = (d) => `${dm(d)}, ${["вс", "пн", "вт", "ср", "чт", "пт", "сб"][d.getDay()]}`;
 
+// ---------- демо-версия: панель и вход в один тап ----------
+function demoBar() {
+  const D = window.REMZONA_DEMO; if (!D) return "";
+  return `<div class="demo"><span class="grow"><b>Демо</b> · данные вымышленные</span>
+    <button data-act="demolive">Коллеги: ${D.live ? "вкл" : "выкл"}</button><button data-act="demoreset">Сбросить</button></div>`;
+}
+function demoLogin() {
+  const D = window.REMZONA_DEMO; if (!D) return "";
+  const acc = D.accounts().filter((a) => a.site === SITES[0]);
+  const row = (a) => `<button data-act="pick" data-login="${esc(a.login)}">${esc(a.name)}<small>${a.role === "admin" ? "администратор" : "механик"} ›</small></button>`;
+  return `<div class="demoacc"><div class="demo"><span class="grow"><b>Демо-версия.</b> Выберите учётную запись — PIN <b>${D.pin}</b>. Данные вымышленные.</span></div>
+    <h3>Администратор — лента, аналитика, люди</h3><div class="names">${acc.filter((a) => a.role === "admin").map(row).join("")}</div>
+    <h3>Механик — заезды с телефона</h3><div class="names">${acc.filter((a) => a.role !== "admin").map(row).join("")}</div></div>`;
+}
+
 // ---------- экраны ----------
 const newCount = () => allJobs().filter((j) => j.mechanic_id !== S.me?.id && !fromBook(j) && new Date(j.updated_at).getTime() > S.seen).length;
 function renderConn() {
@@ -1003,12 +1033,15 @@ function card(j, opts = {}) {
   // opts.at -- конец прошлой смены: что было после него, в этой смене ещё не случилось
   const at = opts.at, open = !j.ended_at || (at && new Date(j.ended_at) >= at);
   const isNew = opts.feed && j.mechanic_id !== S.me.id && !fromBook(j) && new Date(j.updated_at).getTime() > S.seen;
-  const ready = !!j.ready_at && !(at && new Date(j.ready_at) >= at), why = esc((j.wait_reason || "").toLowerCase());
+  // идёт простой (интервал без конца) -- как прежнее «ждёт»
+  const iw = idleOf(j).find((x) => !x.to && !(at && new Date(x.from) >= at));
+  const readyAt = iw ? iw.from : j.ready_at;
+  const ready = !!readyAt && !(at && new Date(readyAt) >= at), why = esc((iw ? iw.r : j.wait_reason || "").toLowerCase());
   // справа -- время: на площадке / ждёт / сколько стояла; под видом работ -- статус и механик
-  const tm = open && ready ? `<span class="tm" title="Ждёт ${dur(j.ready_at, at)}">${clock(j.ready_at, at)}</span>`
+  const tm = open && ready ? `<span class="tm" title="Ждёт ${dur(readyAt, at)}">${clock(readyAt, at)}</span>`
     : open ? `<span class="tm" title="На площадке ${dur(j.started_at, at)}">${clock(j.started_at, at)}</span>`
     : `<span class="tm" title="Стояла ${dur(j.started_at, j.ended_at)}">${clock(j.started_at, j.ended_at)}</span>`;
-  const st = open && ready ? `Готова, ждёт${why ? ` — ${why}` : ""} · ремонт ${dur(j.started_at, j.ready_at)}`
+  const st = open && ready ? `${iw ? "Простой" : "Готова, ждёт"}${why ? ` — ${why}` : ""} · ремонт ${dur(j.started_at, readyAt)}`
     : open ? `${areaOf(j) === "ТО" ? "На ТО" : "На площадке"} с ${when(j.started_at)}` : `Выехала ${when(j.ended_at)}`;
   const txt = [j.fault && "⚠ " + j.fault, j.work && "✔ " + j.work].filter(Boolean).join("\n");
   const crew = j.workers?.length ? esc(j.workers.join(", ")) : j.crew ? `${j.crew} чел.` : "", nPh = S.photos.get(j.id)?.length || 0;
@@ -1017,7 +1050,8 @@ function card(j, opts = {}) {
   if (j.pending) b.push(`<span class="badge amber">ждёт отправки</span>`);
   if (isAdmin() && !j.pending && j.site === EXCEL_SITE) b.push(j.rev > j.imported_rev ? `<span class="badge red">не в таблице</span>` : `<span class="badge green">в таблице</span>`);
   if (isNew) b.push(`<span class="badge red">новое</span>`);
-  if (ready && !open) b.push(`<span class="badge amber">ожидание ${dur(j.ready_at, j.ended_at)}${why ? ` — ${why}` : ""}</span>`);
+  if (j.ready_at && !iw && !open) b.push(`<span class="badge amber">ожидание ${dur(j.ready_at, j.ended_at)}${why ? ` — ${why}` : ""}</span>`);
+  if (idleSum(idleOf(j))) b.push(`<span class="badge amber">простой ${minTxt(idleSum(idleOf(j)))}</span>`);
   if (j.moto) b.push(`<span class="badge">м/ч ${esc(j.moto)}</span>`);
   if (j.tmc) b.push(`<span class="badge">ТМЦ</span>`);
   return `<div class="card ${open ? (ready ? "ready" : "open") : "closed"} ${isNew ? "new" : ""}" data-act="${opts.act || "job"}" data-id="${esc(j.id)}">
@@ -1034,7 +1068,7 @@ function dayTitle(d) {
   const w = d.toDateString() === new Date().toDateString() ? "Сегодня" : d.toDateString() === y.toDateString() ? "Вчера" : "";
   return `<div class="fdate">${w ? `${w} <small>${dt}</small>` : dt}</div>`;
 }
-// лента (04.11.2026, решение пользователя по макету): дата, внутри смены; ночь -- к дате окончания, как в таблицах; порядок прежний -- по последнему изменению
+// лента: дата, внутри смены; ночь -- к дате окончания, как в таблицах; порядок прежний -- по последнему изменению
 function feedHtml(xs) {
   if (!xs.length) return `<div class="empty">Пока пусто</div>`;
   const gs = new Map();
@@ -1179,7 +1213,7 @@ function restoreJob(id) {
   enqueue(j.client_id || null, { deleted: false }, false, j.id);
   S.trash = null; closeSheet(); toast(`${j.gar}: запись возвращена`);
 }
-// ---------- просмотр прошлой смены (решение пользователя): только просмотр, грузится с сервера, S.past не сохраняется ----------
+// ---------- просмотр прошлой смены: только просмотр, грузится с сервера, S.past не сохраняется ----------
 function openPastPick() {
   const now = Date.now(), cur = shiftOf(), on = S.past?.start ?? myShift().start.getTime(), DAYS = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
   const rows = Array.from({ length: 30 }, (_, i) => {
@@ -1196,7 +1230,7 @@ function openPastPick() {
   $("#pastQ").addEventListener("input", (e) => { e.target.value = e.target.value.replace(/\D/g, ""); findGar(e.target.value); });
   drawFound();
 }
-// поиск в истории по машине (04.11.2026, решение пользователя по макету): все записи машины на сервере, новые сверху; карточка только для просмотра
+// поиск в истории по машине: все записи машины на сервере, новые сверху; карточка только для просмотра
 function findGar(q) {
   clearTimeout(S.foundT);
   if (q.length < 3) { S.found = null; return drawFound(); }
@@ -1281,14 +1315,10 @@ function openJob(id, found) {   // found -- записи поиска в ист�
       <input class="inp" id="fTmcN" inputmode="numeric" value="1" aria-label="Количество, шт"></div><div id="tmcList"></div>` : ""}
     <label class="f">Примечание</label><input class="inp" id="fNote" value="${esc(j?.note)}" ${dis}>
     <div id="inspBox"></div>`;
-  // ремонт закончен, машина ждёт не по нашей вине -- время готовности и причина (в таблицу -- примечанием)
-  const wr = j?.wait_reason || "", other = !!wr && !WAITS.includes(wr);
-  S.edit.wait = other ? "Другое" : wr;
-  const readySec = j ? `<label class="f">Готова к выезду — ждёт не по нашей вине</label>
-    <div class="chips" id="fWait">${[...WAITS, "Другое"].map((w) => `<button class="chip ${w === S.edit.wait ? "on" : ""}" data-act="wait" data-v="${w}" ${dis}>${w}</button>`).join("")}</div>
-    <input class="inp" id="fWaitOther" style="margin-top:8px" placeholder="Чего ждёт машина" value="${other ? esc(wr) : ""}" ${dis} ${S.edit.wait === "Другое" ? "" : "hidden"}>
-    <div class="timebox" style="margin-top:8px"><input type="hidden" id="fReady" value="${toInput(j.ready_at)}">${tBtn("fReady", "Готова с", dis)}
-      <button class="btn" data-act="unready" ${dis}>Не ждёт</button></div>` : "";
+  // простой не по нашей вине -- одной строкой, интервалы на отдельном экране
+  S.edit.idle = idleOf(j).map((x) => ({ ...x, n: x.n || "" })); S.edit.idleI = null;
+  const idleSec = j ? `<label class="f">Простой не по нашей вине</label><button class="inp idlesum" id="idleSum" data-act="idleopen"></button>` : "";
+  $("#idlePanel").hidden = true; $("#panel").hidden = false;
   $("#panel").innerHTML = `<div class="head"><button class="nb" data-act="${found ? "foundback" : "close"}">${can ? "Отмена" : found ? "Назад" : "Закрыть"}</button>
       <b>${j ? "Машина " + esc(j.gar) : "Заезд машины"}${j ? `<small>${esc(j.mechanic_name || "")}</small>` : ""}</b>
       ${j && can ? `<button class="nb r" data-act="savejob">Сохранить</button>` : "<span></span>"}</div>
@@ -1309,7 +1339,7 @@ function openJob(id, found) {   // found -- записи поиска в ист�
     <label class="f">Неисправность / что выявлено</label><textarea class="inp" id="fFault" ${dis}>${esc(j?.fault)}</textarea>
     ${j ? "" : `<div class="pnote">📷 Фото можно добавить сразу после «Отметить заезд» — откройте запись</div>`}
     ${j ? more : `<details class="more" id="more"><summary>Дополнительно <small>работы, м/ч, ТМЦ</small></summary>${more}</details>`}
-    ${readySec}
+    ${idleSec}
     ${j ? `<label class="f">Время выезда</label>
       <div class="timebox"><input type="hidden" id="fEnd" value="${toInput(j.ended_at)}">${tBtn("fEnd", "Время выезда", dis)}
       <button class="btn" data-act="now" data-for="fEnd" ${dis}>Сейчас</button></div>` : ""}
@@ -1317,8 +1347,9 @@ function openJob(id, found) {   // found -- записи поиска в ист�
     ${can ? `<div class="actions bar">${j ? `<button class="btn ${j.ended_at ? "red" : ""}" data-act="savejob">Сохранить</button>${!j.ended_at ? `<button class="btn red" data-act="exit">Выехала сейчас</button>` : ""}`
       : `<button class="btn red" data-act="savejob">Отметить заезд</button>`}</div>` : ""}`;
   $("#sheet").hidden = false;
-  ["fStart", "fReady", "fEnd"].forEach(tShow);
-  drawGars(); drawTo(); drawSteps(); drawInsp();
+  ["fStart", "fEnd"].forEach(tShow);
+  drawGars(); drawTo(); drawSteps(); drawInsp(); drawIdleSum();
+  const fa = $("#fFault"); fitTa(fa); fa.addEventListener("input", () => fitTa(fa));   // неисправность растёт по строкам
   $("#inspBox").addEventListener("input", (ev) => { if (ev.target.dataset.pin) S.edit.insp[ev.target.dataset.pin] = ev.target.value; });
   $("#fGar").addEventListener("input", (e) => { S.edit.gar = e.target.value.replace(/\D/g, ""); e.target.value = S.edit.gar; drawGars(); });
   $("#fTmcQ")?.addEventListener("input", drawTmc);
@@ -1334,6 +1365,40 @@ function openJob(id, found) {   // found -- записи поиска в ист�
   if (!j) setTimeout(() => $("#fGar").focus(), 50);
 }
 function fitTa(ta) { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + 2 + "px"; }   // +2 — рамка (border-box)
+// ---------- простои: строка в карточке и экран интервалов ----------
+function drawIdleSum() {
+  const box = $("#idleSum"); if (!box) return;
+  const l = S.edit.idle, n = l.length, go = l.some((x) => !x.to), s = idleSum(l);
+  box.innerHTML = `<span class="t">${n ? `${n} ${n === 1 ? "интервал" : n < 5 ? "интервала" : "интервалов"}` : "Нет"}<small>${S.edit.can ? (n ? "Посмотреть или добавить" : "Добавить") : n ? "Посмотреть" : ""}</small></span>
+    <span class="d">${go ? "идёт" : s ? minTxt(s) : ""} ›</span>`;
+}
+const idleWhen = (x) => `${fmt(x.from)} – ${x.to ? (dm(new Date(x.to)) === dm(new Date(x.from)) ? hm(new Date(x.to)) : fmt(x.to)) : "…"}`;
+function idleSync() {   // значения открытой строки -- в список
+  const e = S.edit, x = e.idleI === null ? null : e.idle[e.idleI]; if (!x) return;
+  x.from = fromInput($("#idleFrom").value) || x.from; x.to = fromInput($("#idleTo").value); x.n = $("#idleNote").value.trim();
+}
+function drawIdle() {
+  const e = S.edit, can = e.can, g = $("#fGar").value || e.gar;
+  const rows = e.idle.map((x, i) => {
+    const open = can && e.idleI === i;
+    return `<div class="work"><div class="idlerow" ${can ? `data-act="idlerow" data-i="${i}"` : ""}><span class="t"><b>${esc(x.r || "Причина не выбрана")}</b><small>${idleWhen(x)}${x.n ? " · " + esc(x.n) : ""}</small></span>
+      <span class="d ${x.to ? "" : "go"}">${x.to ? minTxt(idleMin(x)) : "идёт"}</span></div>
+      ${!open ? "" : `<div class="idlelab">Причина</div>
+        <div class="chips">${IDLE.map((r) => `<button class="chip ${r === x.r ? "on" : ""}" data-act="idlereason" data-v="${r}">${r}</button>`).join("")}</div>
+        <div class="idlelab">Начало</div>
+        <div class="timebox"><input type="hidden" id="idleFrom" value="${toInput(x.from)}">${tBtn("idleFrom", "Начало простоя", "")}<button class="btn" data-act="now" data-for="idleFrom">Сейчас</button></div>
+        <div class="idlelab">Конец (пока ждёт, оставьте пустым)</div>
+        <div class="timebox"><input type="hidden" id="idleTo" value="${toInput(x.to)}">${tBtn("idleTo", "Конец простоя", "")}<button class="btn" data-act="now" data-for="idleTo">Сейчас</button></div>
+        <div class="idlelab">Примечание</div>
+        <input class="inp" id="idleNote" style="background:var(--chip)" placeholder="Например: после диагностики" value="${esc(x.n)}">
+        <div class="idlebtns"><button class="btn" data-act="idledel" data-i="${i}">Убрать</button><button class="btn red" data-act="idlerow" data-i="${i}">Готово</button></div>`}</div>`;
+  }).join("");
+  $("#idlePanel").innerHTML = `<div class="head"><button class="nb" data-act="idleback">Назад</button><b>Простои<small>Машина ${esc(g)}</small></b><span></span></div>
+    ${rows || `<div class="pnote">${can ? "Простоев нет." : "Простоев не отмечено."}</div>`}
+    ${e.idle.length ? `<div class="idletot"><span>Всего</span><b>${minTxt(idleSum(e.idle))}</b></div>` : ""}
+    ${can ? `<button class="addw" data-act="idleadd">＋ Добавить простой</button><div class="pnote">Запишется кнопкой «Сохранить» в карточке.</div>` : ""}`;
+  ["idleFrom", "idleTo"].forEach(tShow);
+}
 function drawGars() {
   const e = S.edit, q = e.gar, busy = new Set(allJobs().filter((x) => !x.ended_at && x.id !== e.j?.id).map((x) => x.gar));
   const xs = S.machines.filter((m) => (m.active || m.gar === q) && (!q || m.gar.startsWith(q)));
@@ -1347,7 +1412,7 @@ function drawTo() {
   $("#toChips").innerHTML = S.edit.kind === "ТО" && S.edit.can ?
     [0, 1, 2, 3, 4, 5, 6].map((n) => `<button class="chip" data-act="to" data-v="ТО-${n}">ТО-${n}</button>`).join("") : "";
 }
-// ---------- осмотр на ТО (03.11.2026, решение пользователя, этап 1 отметок): jobs.inspect, в сообщение ТО; в книгу не идёт, rev не меняет ----------
+// ---------- осмотр на ТО: jobs.inspect, в сообщение ТО; в книгу не идёт, rev не меняет ----------
 // на Площадке блока нет, отметки записи сохраняются (вернётся на ТО -- на месте)
 const INSP = [["ac", "Кондиционер", "исправен", "неисправен"], ["pzd", "ПЖД", "исправно", "неисправно"], ["ansul", "ANSUL", "исправен", "неисправен"],
   ["heat", "Теплообменник", "исправен", "неисправен"], ["uspvl", "УСПВЛ", "исправно", "неисправно"]];
@@ -1368,12 +1433,12 @@ function inspLines(j) {
   const o = j.inspect || {}, pins = PINS.filter(([k]) => o[k]).map(([k, t]) => `${t} ${o[k]}`);
   return [...INSP.filter(([k]) => o[k]).map(([k, t, ok, bad]) => `${t} ${o[k] === "ok" ? ok : o[k] === "bad" ? bad : "нет"}`), ...(pins.length ? [`Замер шкворней ${pins.join(" ")}`] : [])];
 }
-// ---------- выполненные работы (31.10.2026, решение пользователя): как таблица «Выполнены работы» тех. отчёта ----------
+// ---------- выполненные работы: как таблица «Выполнены работы» тех. отчёта ----------
 // работа = описание + начало/окончание (ЧЧ:ММ, одно на всю бригаду) + ФИО; в бланке строка на человека: всего 10, на работу до 5.
 // jobs.steps -- для тех. отчёта; work (описания построчно), workers, crew собираются из них -- книга ввода не меняется.
 // Старая запись без steps -- одна работа из work/workers без времени.
 const ST_ROWS = 10, ST_CREW = 5;
-// представители завода (01.11.2026, решение пользователя): работу делали представители -- только эта отметка, без фамилий
+// представители завода: работу делали представители -- только эта отметка, без фамилий
 // и без числа людей (выбор фамилии её снимает и наоборот); в бланке -- одна строка ФИО «Представители завода», количество пусто
 const REP = "Представители завода";
 const people = (who) => who.filter((n) => n !== REP);
@@ -1414,7 +1479,7 @@ function drawSteps() {
       <div class="who"></div>
       <input class="inp" data-sf="wq" style="margin-top:8px" placeholder="Найти исполнителя: фамилия" autocomplete="off">
     </div>`).join("");
-  e.steps.forEach((w, i) => { drawStTot(i); drawStWho(i); });
+  e.steps.forEach((w, i) => { drawStTot(i); drawStWho(i); fitTa(stBox(i).querySelector('textarea[data-sf="t"]')); });
   box.querySelectorAll("textarea").forEach((ta) => fitTa(ta));
   drawStRows();
 }
@@ -1459,7 +1524,7 @@ function rememberWorkers(xs) {   // недавние -- первыми, до 15;
   save("rz_wk_last", xs);
   save("rz_wk_recent", [...xs, ...load("rz_wk_recent", []).filter((n) => !xs.includes(n))].slice(0, 15));
 }
-// ---------- прайс ТМЦ (30.10.2026, решение пользователя): кэш в телефоне, сверка раз в 3 суток ----------
+// ---------- прайс для ТМЦ: кэш в телефоне, сверка раз в 3 суток ----------
 let PRICE = null;
 const norm = (s) => s.toLowerCase().replace(/ё/g, "е");
 function priceRows(text) {
@@ -1602,7 +1667,7 @@ const tBtn = (id, title, dis) => `<button class="inp tval" data-act="tpick" data
 function tShow(id) {
   const b = document.querySelector(`.tval[data-for="${id}"]`); if (!b) return;
   const v = $("#" + id).value, d = v && new Date(v);
-  b.textContent = v ? `${dayName(d)}, ${hm(d)}` : id === "fEnd" ? "не выехала" : "—"; b.classList.toggle("nil", !v);
+  b.textContent = v ? `${dayName(d)}, ${hm(d)}` : id === "fEnd" ? "не выехала" : id === "idleTo" ? "идёт" : "—"; b.classList.toggle("nil", !v);
 }
 function setStTime(i, f, v) {
   S.edit.steps[i][f] = v;
@@ -1622,7 +1687,7 @@ function wheel(items, sel, cls = "") {
   return el;
 }
 function openTp(t) {
-  // минуты -- шагом 5 (решение пользователя 01.11.2026: меньше листать); значение не кратно 5 -- ближайшее
+  // минуты -- шагом 5; значение не кратно 5 -- ближайшее
   const box = $("#wheels"), H = Array.from({ length: 24 }, (_, k) => pad2(k)), M = Array.from({ length: 60 / MSTEP }, (_, k) => pad2(k * MSTEP));
   const mi = (m) => Math.min(M.length - 1, Math.round(m / MSTEP));
   const colon = () => Object.assign(document.createElement("div"), { className: "colon", textContent: ":" });
@@ -1636,7 +1701,7 @@ function openTp(t) {
     const id = t.dataset.for, v = $("#" + id).value, cur = v ? new Date(v) : new Date();
     const ago = Math.round((midnight(new Date()) - midnight(cur)) / 864e5), back = Math.max(7, ago);
     const days = Array.from({ length: back + 2 }, (_, k) => { const d = midnight(new Date()); d.setDate(d.getDate() - back + k); return d; });
-    TP = { id, days }; $("#tpTitle").textContent = t.dataset.t; $("#tpClear").hidden = !(id === "fEnd" && v);
+    TP = { id, days }; $("#tpTitle").textContent = t.dataset.t; $("#tpClear").hidden = !((id === "fEnd" || id === "idleTo") && v);
     box.append(wheel(days.map(dayName), Math.min(days.length - 1, Math.max(0, back - ago)), "day"), wheel(H, cur.getHours()), colon(), wheel(M, mi(cur.getMinutes())));
   }
   $("#tpick").hidden = false;
@@ -1645,11 +1710,11 @@ function openTp(t) {
 function doneTp() {
   const ws = [...$("#wheels").querySelectorAll(".wheel")].map((w) => Math.min(w.querySelectorAll(".it").length - 1, Math.max(0, Math.round(w.scrollTop / WH))));
   if (TP.f) setStTime(TP.i, TP.f, `${pad2(ws[0])}:${pad2(ws[1] * MSTEP)}`);
-  else { const d = TP.days[ws[0]]; $("#" + TP.id).value = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(ws[1])}:${pad2(ws[2] * MSTEP)}`; tShow(TP.id); }
+  else { const d = TP.days[ws[0]]; $("#" + TP.id).value = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(ws[1])}:${pad2(ws[2] * MSTEP)}`; tShow(TP.id); if (TP.id.startsWith("idle")) { idleSync(); drawIdle(); } }
   closeTp();
 }
 function closeTp() { $("#tpick").hidden = true; TP = null; }
-function closeSheet() { $("#sheet").hidden = true; S.edit = null; }
+function closeSheet() { $("#sheet").hidden = true; $("#idlePanel").hidden = true; $("#panel").hidden = false; S.edit = null; }
 function saveJob(exitNow) {
   const e = S.edit, j = e.j;
   // пока карточка была открыта: запись удалили или её изменил другой сотрудник (иначе его изменения затёрлись бы)
@@ -1669,12 +1734,19 @@ function saveJob(exitNow) {
   if (ended && Math.floor(new Date(ended) / 60000) <= Math.floor(new Date(started) / 60000)) return toast("Выезд должен быть позже заезда (хотя бы на минуту)", true);
   if (new Date(started) > new Date(Date.now() + 10 * 60000)) return toast("Время заезда в будущем — проверьте", true);
   if (ended && new Date(ended) > new Date(Date.now() + 10 * 60000)) return toast("Время выезда в будущем — проверьте", true);
-  const ready = j ? fromInput($("#fReady").value) : null;
-  const wait = !ready ? "" : e.wait === "Другое" ? $("#fWaitOther").value.trim() : e.wait;
-  if (ready && !wait) return toast("Укажите, чего ждёт машина", true);
-  if (ready && new Date(ready) < new Date(started)) return toast("Готовность раньше заезда — проверьте время", true);
-  if (ready && ended && new Date(ended) < new Date(ready)) return toast("Выезд раньше готовности — проверьте время", true);
-  if (ready && new Date(ready) > new Date(Date.now() + 10 * 60000)) return toast("Время готовности в будущем — проверьте", true);
+  // простои: при выезде незакрытый интервал заканчивается выездом; по минутам, как таблицы
+  const mn = (iso) => Math.floor(new Date(iso) / 60000), soon = Date.now() + 10 * 60000;
+  const idle = (e.idle || []).map((x) => ({ u: x.u, r: x.r, from: x.from, to: x.to || ended || null, n: (x.n || "").trim() }));
+  for (const x of idle) {
+    if (!x.r) return toast("Простой: выберите причину", true);
+    if (x.r === "Другое" && !x.n) return toast("Простой: напишите в примечании, чего ждала машина", true);
+    if (mn(x.from) < mn(started)) return toast(`Простой (${x.r}) начался раньше заезда — проверьте время`, true);
+    if (new Date(x.from) > new Date(soon) || (x.to && new Date(x.to) > new Date(soon))) return toast(`Простой (${x.r}): время в будущем — проверьте`, true);
+    if (x.to && mn(x.to) <= mn(x.from)) return toast(`Простой (${x.r}): конец должен быть позже начала`, true);
+    if (x.to && ended && mn(x.to) > mn(ended)) return toast(`Простой (${x.r}) закончился позже выезда — проверьте время`, true);
+  }
+  const byFrom = [...idle].sort((a, b) => new Date(a.from) - new Date(b.from));
+  for (let i = 1; i < byFrom.length; i++) if (!byFrom[i - 1].to || mn(byFrom[i].from) < mn(byFrom[i - 1].to)) return toast("Простои пересекаются по времени — проверьте", true);
   const motoS = $("#fMoto").value.replace(",", ".").trim();
   if (motoS && !/^\d+(\.\d+)?$/.test(motoS)) return toast("Моточасы — числом", true);
   const insp = {};
@@ -1686,14 +1758,15 @@ function saveJob(exitNow) {
   }
   // как в книге ввода (CapFirst): первая буква каждой строки неисправности и работы -- заглавная, строка с цифры не трогается
   const cap = (s) => s.trim().replace(/(^|\n)(\s*)([a-zа-яё])/g, (m, a, b, c) => a + b + c.toUpperCase());
-  // пустые работы не сохраняем; описание можно не заполнять (решение пользователя 01.11.2026) -- в тех. отчёте строка с временем и ФИО;
+  // пустые работы не сохраняем; описание можно не заполнять -- в тех. отчёте строка с временем и ФИО;
   // в «Сделано» книги -- описания построчно (переносы внутри описания бланк сведёт через «; »)
   const steps = e.steps.map((w) => ({ t: cap(w.t), from: isHm(w.from) ? w.from : "", to: isHm(w.to) ? w.to : "", who: [...w.who], d: w.d || (w.legacy ? "" : stKey(w.from)) }))
     .filter((w) => w.t || w.from || w.to || w.who.length);
   const workers = [...new Set(steps.flatMap((w) => w.who))];
   const data = { gar, area: e.area, inspect: Object.keys(insp).length ? insp : null, kind: e.kind, started_at: started, ended_at: ended, fault: cap($("#fFault").value), work: steps.map((w) => w.t).filter(Boolean).join("\n"),
-    moto: motoS ? +motoS : null, tmc: $("#fTmc").value.trim(), note: $("#fNote").value.trim(), ready_at: ready, wait_reason: wait,
+    moto: motoS ? +motoS : null, tmc: $("#fTmc").value.trim(), note: $("#fNote").value.trim(), ready_at: j?.ready_at ?? null, wait_reason: j?.wait_reason || "",
     steps: steps.length ? steps : null, workers, crew: people(workers).length ? Math.min(people(workers).length, 20) : (j?.crew ?? null) };
+  if (j) data.idle = idle.length ? idle : null;
   rememberWorkers(people(steps.at(-1)?.who || []));
   if (!j) {
     const dup = allJobs().find((x) => !x.ended_at && x.gar === gar);
@@ -1742,7 +1815,7 @@ function openSite() {
     <div class="sitepick">${SITES.map((v) => `<button class="${S.me.site === v ? "on" : ""}" data-act="setsite" data-v="${v}">${v}</button>`).join("")}</div>`;
   $("#sheet").hidden = false;
 }
-// сообщение в общий чат за выбранную смену (01.11.2026, решение пользователя): записи участка с одной вкладки (Площадка или ТО).
+// сообщение в общий чат за выбранную смену: записи участка с одной вкладки (Площадка или ТО).
 // Входят: заехавшие или выехавшие в смену и начатые раньше, если запись меняли в эту смену («Продолжение ремонта»).
 // Площадка: стоят с прошлых смен, запись не менялась с начала смены -- вверху списком «Без воздействия», как в чате; на ТО этого списка нет.
 // src -- записи прошлой смены с сервера; менялась ли запись в ту смену -- по updated_at или по работам с d этой смены
@@ -1838,7 +1911,13 @@ document.addEventListener("click", async (ev) => {
     case "tpick": openTp(t); break;
     case "tpcancel": closeTp(); break;
     case "tpdone": doneTp(); break;
-    case "tpclear": if (TP.f) setStTime(TP.i, TP.f, ""); else { $("#" + TP.id).value = ""; tShow(TP.id); } closeTp(); break;
+    case "tpclear": if (TP.f) setStTime(TP.i, TP.f, ""); else { $("#" + TP.id).value = ""; tShow(TP.id); if (TP.id.startsWith("idle")) { idleSync(); drawIdle(); } } closeTp(); break;
+    case "idleopen": S.edit.idleI = null; drawIdle(); $("#panel").hidden = true; $("#idlePanel").hidden = false; $("#idlePanel").scrollTop = 0; break;
+    case "idleback": idleSync(); S.edit.idleI = null; $("#idlePanel").hidden = true; $("#panel").hidden = false; drawIdleSum(); break;
+    case "idlerow": { idleSync(); const i = +t.dataset.i; S.edit.idleI = S.edit.idleI === i ? null : i; drawIdle(); break; }
+    case "idleadd": idleSync(); S.edit.idle.push({ u: uuid().slice(0, 8), r: "", from: new Date().toISOString(), to: null, n: "" }); S.edit.idleI = S.edit.idle.length - 1; drawIdle(); break;
+    case "idledel": S.edit.idle.splice(+t.dataset.i, 1); S.edit.idleI = null; drawIdle(); break;
+    case "idlereason": idleSync(); S.edit.idle[S.edit.idleI].r = t.dataset.v; drawIdle(); break;
     case "stpick": { const i = +t.closest(".work").dataset.i, w = S.edit.steps[i], box = stBox(i), ta = box.querySelector("textarea");
       w.t = w.t.trim() ? w.t.trim() + "; " + t.dataset.v : t.dataset.v; ta.value = w.t; fitTa(ta);
       box.querySelector('[data-sf="q"]').value = ""; drawStSug(i); break; }
@@ -1855,10 +1934,10 @@ document.addEventListener("click", async (ev) => {
     case "logout": if (confirm("Выйти из приложения?")) { if (S.queue.length && !confirm(`Не отправлено записей: ${S.queue.length}. Они останутся на этом телефоне. Выйти?`)) return;
       if (S.channel) sb.removeChannel(S.channel); if (S.pres) sb.removeChannel(S.pres); await pushOff(); await sb.auth.signOut(); localStorage.removeItem("rz_me"); S.past = null; showLogin(); } break;
     case "tab": S.tab = t.dataset.tab; render(); scrollTo(0, 0); if (S.tab === "ana") loadAna(); break;
-    case "anaper": ANA.days = +t.dataset.v; ANA.sel = null; loadAna(); break;
-    case "anabar": ANA.sel = ANA.sel === +t.dataset.i ? null : +t.dataset.i; render(); break;
     case "demolive": REMZONA_DEMO.setLive(!REMZONA_DEMO.live); render(); toast(REMZONA_DEMO.live ? "Имитация включена: коллеги будут делать записи" : "Имитация выключена"); break;
     case "demoreset": if (confirm("Сбросить демо? Вымышленные данные создадутся заново, ваши записи пропадут.")) REMZONA_DEMO.reset(); break;
+    case "anaper": ANA.days = +t.dataset.v; ANA.sel = null; loadAna(); break;
+    case "anabar": ANA.sel = ANA.sel === +t.dataset.i ? null : +t.dataset.i; render(); break;
     case "view": S.view = t.dataset.v; render(); scrollTo(0, 0); break;
     case "pastpick": S.found = null; openPastPick(); break;
     case "foundjob": openJob(t.dataset.id, S.found.jobs); break;
@@ -1882,12 +1961,7 @@ document.addEventListener("click", async (ev) => {
     case "kind": S.edit.kind = t.dataset.v; S.edit.kindSet = true; document.querySelectorAll("#fKind .chip").forEach((c) => c.classList.toggle("on", c.dataset.v === S.edit.kind)); drawTo(); break;
     case "to": { $("#more")?.setAttribute("open", ""); const w = S.edit.steps[0], ta = stBox(0).querySelector("textarea");
       w.t = !/^ТО-\d/.test(w.t) ? (t.dataset.v + " " + w.t).trim() : w.t.replace(/^ТО-\d/, t.dataset.v); ta.value = w.t; break; }
-    case "now": $("#" + t.dataset.for).value = toInput(new Date().toISOString()); tShow(t.dataset.for); break;
-    case "wait": S.edit.wait = t.dataset.v; document.querySelectorAll("#fWait .chip").forEach((c) => c.classList.toggle("on", c === t));
-      $("#fWaitOther").hidden = S.edit.wait !== "Другое"; if (S.edit.wait === "Другое") $("#fWaitOther").focus();
-      if (!$("#fReady").value) { $("#fReady").value = toInput(new Date().toISOString()); tShow("fReady"); } break;
-    case "unready": S.edit.wait = ""; document.querySelectorAll("#fWait .chip").forEach((c) => c.classList.remove("on"));
-      $("#fWaitOther").hidden = true; $("#fReady").value = ""; tShow("fReady"); break;
+    case "now": $("#" + t.dataset.for).value = toInput(new Date().toISOString()); tShow(t.dataset.for); if (t.dataset.for.startsWith("idle")) { idleSync(); drawIdle(); } break;
     case "savejob": saveJob(false); break;
     case "exit": saveJob(true); break;
     // удалить может администратор и механик -- свою запись (внёс по ошибке); чужую сервер не даст (jobs_before)
@@ -1963,6 +2037,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && e.target.id === "lName") findName();
   if (e.key === "Escape" && !$("#tpick").hidden) return closeTp();
   if (e.key === "Escape" && !$("#pview").hidden) return void ($("#pview").hidden = true);
+  if (e.key === "Escape" && !$("#idlePanel").hidden) return $('#idlePanel [data-act="idleback"]').click();
   if (e.key === "Escape" && !$("#sheet").hidden) closeSheet();
 });
 // случайное касание мимо листа не закрывает заполняемую карточку (вписанное пропало бы); закрыть -- «Отмена»
