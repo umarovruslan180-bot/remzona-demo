@@ -1,0 +1,1955 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F9F9F9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ремзона">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Ремзона · демо</title>
+<script>try { const t = JSON.parse(localStorage.getItem("rz_theme")); if (t && t !== "auto") document.documentElement.dataset.theme = t; } catch {}</script>
+<style>
+/* оформление в духе iOS (01.11.2026, выбор пользователя по макету «Стиль iPhone»): сгруппированные списки, сегменты,
+   «таблетки» фамилий, полупрозрачные панели, выбор времени барабанами; акцент -- синий (демо-версия). Имена переменных прежние. */
+:root {
+  color-scheme: light;
+  --red: #0A66C2; --red-soft: rgba(10,102,194,.1); --bad: #C62828; --graphite: #8E8E93; --on-graphite: #FFFFFF; --strong: #000;
+  --bg: #F2F2F7; --card: #FFFFFF; --seg-on: #FFFFFF; --line: rgba(60,60,67,.18); --line2: rgba(60,60,67,.18); --text: #000;
+  --muted: rgba(60,60,67,.6); --muted2: rgba(60,60,67,.3); --chip: rgba(118,118,128,.12); --fill2: rgba(118,118,128,.2);
+  --press: rgba(118,118,128,.16); --disabled: rgba(118,118,128,.08); --scrim: rgba(0,0,0,.4); --shadow: none;
+  --green: #248A3D; --green-soft: rgba(52,199,89,.15); --amber: #C96400; --amber-soft: rgba(255,149,0,.15);
+  --bar: rgba(249,249,249,.94); --toast: rgba(28,28,30,.92);
+  --logo-bg: transparent; --logo-pad: 0;
+}
+/* тёмная тема: по настройке телефона или кнопкой в шапке (data-theme) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --red: #4DA3FF; --red-soft: rgba(77,163,255,.18); --bad: #FF6B6B; --graphite: #636366; --on-graphite: #FFFFFF; --strong: #FFF;
+    --bg: #000; --card: #1C1C1E; --seg-on: #636366; --line: rgba(84,84,88,.6); --line2: rgba(84,84,88,.6); --text: #FFF;
+    --muted: rgba(235,235,245,.6); --muted2: rgba(235,235,245,.3); --chip: rgba(118,118,128,.24); --fill2: rgba(118,118,128,.36);
+    --press: rgba(118,118,128,.28); --disabled: rgba(118,118,128,.12); --scrim: rgba(0,0,0,.6); --shadow: none;
+    --green: #30D158; --green-soft: rgba(48,209,88,.18); --amber: #FF9F0A; --amber-soft: rgba(255,159,10,.18);
+    --bar: rgba(22,22,22,.94); --toast: rgba(58,58,60,.95);
+    --logo-bg: #FFFFFF; --logo-pad: 3px 6px;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --red: #4DA3FF; --red-soft: rgba(77,163,255,.18); --bad: #FF6B6B; --graphite: #636366; --on-graphite: #FFFFFF; --strong: #FFF;
+  --bg: #000; --card: #1C1C1E; --seg-on: #636366; --line: rgba(84,84,88,.6); --line2: rgba(84,84,88,.6); --text: #FFF;
+  --muted: rgba(235,235,245,.6); --muted2: rgba(235,235,245,.3); --chip: rgba(118,118,128,.24); --fill2: rgba(118,118,128,.36);
+  --press: rgba(118,118,128,.28); --disabled: rgba(118,118,128,.12); --scrim: rgba(0,0,0,.6); --shadow: none;
+  --green: #30D158; --green-soft: rgba(48,209,88,.18); --amber: #FF9F0A; --amber-soft: rgba(255,159,10,.18);
+  --bar: rgba(22,22,22,.94); --toast: rgba(58,58,60,.95);
+  --logo-bg: #FFFFFF; --logo-pad: 3px 6px;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--bg); color: var(--text);
+  font: 17px/1.3 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body { padding-bottom: env(safe-area-inset-bottom); }
+/* как у приложения: экран не «оттягивается» за край (поля при пролистывании) и не обновляется потягиванием -- данные обновляются сами */
+html, body { overscroll-behavior: none; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { touch-action: manipulation; }
+svg.i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; }
+img.logo { background: var(--logo-bg); padding: var(--logo-pad); border-radius: 6px; }
+/* полупрозрачные панели (шапка, низ) -- как в iOS */
+header, #nav, .dock, .actions.bar, .panel .head { -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); }
+header { position: sticky; top: 0; z-index: 5; background: var(--bar); border-bottom: .5px solid var(--line);
+  padding: calc(4px + env(safe-area-inset-top)) 4px 4px 16px; display: flex; align-items: center; gap: 4px; min-height: 48px; }
+header[hidden] { display: none; }
+header img { height: 19px; flex: none; }
+header .iconbtn { width: 40px; }
+header .who { margin-left: auto; min-width: 0; text-align: right; line-height: 1.25; }
+header .who b { display: block; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--strong); }
+#conn { font-size: 12px; color: var(--muted); white-space: nowrap; }
+#conn::before { content: "●"; margin-right: 4px; color: var(--muted2); }
+#conn.ok::before { color: var(--green); } #conn.wait::before { color: var(--amber); }
+.iconbtn { border: 0; background: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 10px;
+  cursor: pointer; color: var(--red); flex: none; padding: 0; font-size: 20px; }
+.iconbtn:active { background: var(--press); }
+main { max-width: 720px; margin: 0 auto; padding: 8px 16px 120px; }
+/* заголовки разделов -- мелкие прописные над группой */
+h2 { font-size: 13px; font-weight: 400; text-transform: uppercase; letter-spacing: .02em; color: var(--muted); margin: 24px 16px 7px;
+  display: flex; align-items: center; gap: 6px; }
+h2 .n { color: var(--muted); font-variant-numeric: tabular-nums; }
+h2 .n.red { background: var(--red); color: #fff; border-radius: 9px; padding: 0 7px; font-size: 12px; line-height: 18px; font-weight: 600; }
+/* смена: дата, сегмент Ночь/День, участок */
+.shift { background: var(--card); border-radius: 10px; padding: 7px 6px 7px 16px; margin-top: 8px; display: flex; flex-wrap: wrap;
+  justify-content: space-between; align-items: center; gap: 6px 8px; font-size: 15px; }
+.shift > span { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.shift .sw { display: inline-flex; background: var(--chip); border-radius: 9px; padding: 2px; }
+.shift .sw button { border: 0; background: none; color: inherit; font-size: 13px; font-weight: 500; min-height: 30px; padding: 0 14px; border-radius: 7px; cursor: pointer; }
+.shift .sw button.on { background: var(--seg-on); box-shadow: 0 3px 8px rgba(0,0,0,.12), 0 3px 1px rgba(0,0,0,.04); font-weight: 600; }
+.shift small { color: var(--muted); font-size: 15px; font-variant-numeric: tabular-nums; }
+.shift .sdate { border: 0; background: none; color: inherit; font: inherit; padding: 6px 0; cursor: pointer; text-decoration: underline dotted var(--muted); text-underline-offset: 4px; }
+.pastday { display: flex; align-items: center; gap: 8px; padding: 6px 16px; }
+.pastday b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.pastday small { color: var(--muted); font-size: 14px; flex: 1; }
+.pastq { padding: 8px 16px; }
+.fdate { font-size: 15px; font-weight: 600; margin: 20px 16px 2px; }
+.fdate small { color: var(--muted); font-weight: 400; font-size: 13px; }
+.fshift { font-size: 13px; font-weight: 600; color: var(--muted); margin: 8px 16px 5px; }
+.shift .site { border: 0; background: none; color: var(--red); font-size: 15px; padding: 0 10px; min-height: 36px; margin-left: auto; cursor: pointer; white-space: nowrap; }
+.shift .site::after { content: ""; display: inline-block; width: 7px; height: 7px; margin: 0 0 1px 6px;
+  border-right: 2px solid currentColor; border-top: 2px solid currentColor; transform: rotate(45deg); opacity: .6; }
+.sitepick { background: var(--card); border-radius: 10px; overflow: hidden; margin: 12px 0; }
+.sitepick button { position: relative; display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; padding: 0 16px;
+  border: 0; background: none; color: var(--text); font-size: 17px; cursor: pointer; }
+.sitepick button + button::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: .5px solid var(--line); }
+.sitepick button:active { background: var(--press); }
+.sitepick button.on::after { content: "✓"; color: var(--red); font-weight: 600; }
+.big { width: 100%; border: 0; border-radius: 14px; background: var(--red); color: #fff; font-size: 17px; font-weight: 600;
+  min-height: 50px; padding: 13px; margin-top: 16px; cursor: pointer; }
+.big:active { opacity: .8; }
+/* машины -- строки сгруппированного списка; время справа: на площадке (красное) / ждёт (оранжевое) / стояла (серое) */
+.group { background: var(--card); border-radius: 10px; overflow: hidden; }
+.card { position: relative; background: var(--card); display: flex; gap: 12px; align-items: center; padding: 11px 32px 11px 16px;
+  cursor: pointer; transition: background .12s; }
+.group > .card + .card::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: .5px solid var(--line); }
+.card::after { content: ""; position: absolute; right: 16px; top: 50%; width: 8px; height: 8px; margin-top: -5px;
+  border-right: 2px solid var(--muted2); border-top: 2px solid var(--muted2); transform: rotate(45deg); }
+.card:active { background: var(--press); }
+.card.new { box-shadow: inset 4px 0 0 var(--red); }
+.card .gar { flex: none; width: 60px; align-self: center; font-size: 26px; font-weight: 700; line-height: 1;
+  color: var(--strong); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.card .gar small { display: block; margin-top: 5px; font-size: 11px; font-weight: 400; color: var(--muted); letter-spacing: 0; }
+.card .body { flex: 1; min-width: 0; }
+.card .top { display: flex; gap: 8px; align-items: center; }
+.card .kind { font-size: 17px; font-weight: 600; color: var(--strong); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card .tm { margin-left: auto; flex: none; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; padding: 2px 8px; border-radius: 8px;
+  color: var(--red); background: var(--red-soft); }
+.card.ready .tm { color: var(--amber); background: var(--amber-soft); }
+.card.closed .tm { color: var(--muted); background: var(--chip); }
+.card .st { font-size: 15px; color: var(--muted); margin-top: 2px; }
+.card .txt { font-size: 15px; margin-top: 4px; color: var(--text); white-space: pre-line; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.card .meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; font-size: 13px; color: var(--muted); }
+.card .meta span { display: inline-flex; align-items: center; gap: 5px; min-width: 0; }
+.card .meta svg.i { width: 15px; height: 15px; flex: none; }
+/* «Заезд машины» у механика -- в нижней панели, под большим пальцем */
+.dock { position: fixed; z-index: 6; left: 0; right: 0; bottom: 0; background: var(--bar); border-top: .5px solid var(--line);
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); }
+.fab { width: 100%; max-width: 688px; margin: 0 auto; border: 0; border-radius: 14px; background: var(--red); color: #fff; min-height: 50px;
+  font-size: 17px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.fab svg.i { width: 20px; height: 20px; stroke-width: 2.6; }
+.fab:active { opacity: .8; }
+main:has(.fab) ~ #toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
+.badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.badge { font-size: 12px; font-weight: 500; border-radius: 6px; padding: 2px 7px; background: var(--chip); color: var(--muted); }
+.badge.red { background: var(--red-soft); color: var(--red); } .badge.green { background: var(--green-soft); color: var(--green); }
+.badge.amber { background: var(--amber-soft); color: var(--amber); }
+.empty { background: var(--card); color: var(--muted); border-radius: 10px; padding: 12px 16px; font-size: 15px; }
+/* нижнее меню администратора -- панель вкладок */
+#nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--bar); border-top: .5px solid var(--line);
+  display: grid; grid-template-columns: repeat(5, 1fr); padding-bottom: env(safe-area-inset-bottom); }
+#nav[hidden] { display: none; }
+#nav button { position: relative; border: 0; background: none; min-height: 52px; padding: 6px 0 5px; display: grid; justify-items: center;
+  align-content: center; gap: 2px; font-size: 10px; font-weight: 500; color: var(--graphite); cursor: pointer; }
+#nav button svg.i { width: 25px; height: 25px; }
+#nav button.on { color: var(--red); }
+#nav .n { position: absolute; top: 3px; left: calc(50% + 6px); min-width: 18px; padding: 0 5px; border-radius: 9px; background: var(--red);
+  color: #fff; font-size: 11px; line-height: 18px; font-weight: 600; }
+#nav .n.dim { background: var(--graphite); color: var(--on-graphite); }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+/* кнопки: серая с красным текстом, залитая красная, «тонированная» */
+.btn { border: 0; background: var(--chip); color: var(--red); border-radius: 10px; min-height: 44px; padding: 10px 16px; cursor: pointer; font-size: 15px; font-weight: 500; }
+.btn:active { opacity: .7; }
+.btn.red { background: var(--red); color: #fff; font-weight: 600; }
+.btn.dark { background: var(--red-soft); color: var(--red); font-weight: 600; }
+.btn.small { min-height: 34px; padding: 6px 13px; font-size: 15px; border-radius: 17px; }
+.btn:disabled { opacity: .45; }
+.list { background: var(--card); border-radius: 10px; overflow: hidden; }
+.list > div { position: relative; display: flex; align-items: center; gap: 8px; padding: 10px 16px; min-height: 44px; flex-wrap: wrap; }
+.list > div + div::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: .5px solid var(--line); }
+.list b { font-weight: 500; }
+.list .grow { flex: 1; min-width: 140px; }
+.off { opacity: .45; }
+/* форма -- лист снизу с панелью «Отмена · заголовок · Сохранить» */
+#sheet { position: fixed; inset: 0; z-index: 20; background: var(--scrim); display: flex; align-items: flex-end; justify-content: center; }
+#sheet[hidden] { display: none; }
+#sheet:not([hidden]) { animation: fade .2s ease; }
+#sheet:not([hidden]) .panel { animation: sheetUp .3s cubic-bezier(.2,.8,.2,1); }
+@keyframes fade { from { background: transparent; } }
+@keyframes sheetUp { from { transform: translateY(60px); opacity: .4; } }
+@media (prefers-reduced-motion: reduce) { #sheet:not([hidden]), #sheet:not([hidden]) .panel, #tpick, .tsheet { animation: none; } }
+.panel { background: var(--bg); width: 100%; max-width: 720px; max-height: calc(100% - 10px - env(safe-area-inset-top)); overflow-y: auto;
+  overscroll-behavior: contain; border-radius: 12px 12px 0 0; padding: 0 16px; }
+.panel .head { position: sticky; top: 0; z-index: 3; margin: 0 -16px; padding: 4px 8px; min-height: 56px; display: grid;
+  grid-template-columns: 1fr auto 1fr; align-items: center; gap: 4px; background: var(--bar); border-bottom: .5px solid var(--line); }
+.panel .head b { font-size: 17px; font-weight: 600; color: var(--strong); text-align: center; line-height: 1.2; min-width: 0; max-width: 56vw;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.panel .head b small { display: block; font-size: 12px; font-weight: 400; color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
+.nb { justify-self: start; border: 0; background: none; color: var(--red); font-size: 17px; padding: 10px 8px; cursor: pointer; white-space: nowrap; }
+.nb.r { justify-self: end; font-weight: 600; }
+.nb:active { opacity: .5; }
+label.f { display: block; margin: 22px 16px 7px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .02em; }
+.inp { width: 100%; min-height: 44px; border: 0; border-radius: 10px; padding: 11px 16px; background: var(--card); font-size: 17px; color: var(--text); }
+.inp::placeholder { color: var(--muted2); }
+textarea.inp { min-height: 96px; resize: vertical; line-height: 1.35; }
+.inp:focus { outline: 0; }
+.inp:disabled { color: var(--muted); opacity: 1; }
+/* выбор: «таблетки»; одиночный выбор (вид работ, роль, участок) -- сегменты */
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { min-height: 36px; border: 0; background: var(--chip); border-radius: 18px; padding: 7px 14px; cursor: pointer; font-size: 15px; }
+.chip.on { background: var(--red); color: #fff; }
+.chip:disabled { opacity: .55; }
+#fArea, #fKind, #nsRole, #seRole, #seSite { flex-wrap: nowrap; gap: 0; background: var(--chip); border-radius: 9px; padding: 2px; }
+#fArea .chip, #fKind .chip, #nsRole .chip, #seRole .chip, #seSite .chip { flex: 1; min-width: 0; min-height: 32px; border-radius: 7px; background: none; color: var(--text);
+  padding: 4px 1px; font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#fArea .chip.on, #fKind .chip.on, #nsRole .chip.on, #seRole .chip.on, #seSite .chip.on { background: var(--seg-on); color: var(--text); font-weight: 600;
+  box-shadow: 0 3px 8px rgba(0,0,0,.12), 0 3px 1px rgba(0,0,0,.04); }
+.gars { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; margin-top: 8px; max-height: 208px; overflow-y: auto; }
+.gars button { min-height: 44px; border: 0; background: var(--card); color: var(--text); border-radius: 10px; font-size: 17px; font-weight: 600; cursor: pointer; }
+.gars button:active { background: var(--press); }
+.gars button.busy { color: var(--red); background: var(--red-soft); }
+.gars button.on { background: var(--red); color: #fff; }
+.seg { display: grid; grid-template-columns: repeat(6, 1fr); background: var(--chip); border-radius: 9px; padding: 2px; }
+.seg button { border: 0; background: none; border-radius: 7px; min-height: 32px; font-size: 13px; font-weight: 500; cursor: pointer; }
+.seg button.on { background: var(--seg-on); font-weight: 600; box-shadow: 0 3px 8px rgba(0,0,0,.12), 0 3px 1px rgba(0,0,0,.04); }
+.seg button:disabled { opacity: .55; }
+.seg.two { grid-template-columns: 1fr 1fr; }
+.seg.three { grid-template-columns: auto auto auto; }
+.seg.views { margin-top: 14px; }
+.seg.views button { min-height: 34px; font-size: 15px; padding: 0 4px; white-space: nowrap; }
+.timebox { display: flex; gap: 8px; } .timebox .inp { flex: 1; min-width: 0; }
+/* поле времени: кнопка со значением, выбор -- барабанами (#tpick) */
+.tval { text-align: left; cursor: pointer; color: var(--red); font-variant-numeric: tabular-nums; }
+.tval.nil { color: var(--muted); }
+.tval:disabled { color: var(--muted); cursor: default; }
+.tmcq { display: flex; gap: 8px; margin-top: 8px; } .tmcq #fTmcQ { flex: 1; min-width: 0; } .tmcq #fTmcN { flex: 0 0 64px; text-align: center; padding: 11px 6px; }
+.wk { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.wk .chip { min-height: 34px; padding: 6px 12px; }
+.wk .chip.on::after { content: "  ✕"; font-size: 12px; opacity: .8; }
+.wk .chip small { color: var(--muted); font-size: 12px; }
+.wk .chip.on small { color: inherit; }
+.wkl { display: block; margin-top: 6px; padding: 8px 0; text-align: left; font-size: 15px; color: var(--red); text-decoration: none; }
+.tmcres { display: grid; gap: 6px; margin-top: 8px; max-height: 320px; overflow-y: auto; }
+.tmcres button { text-align: left; border: 0; background: var(--card); color: var(--text); border-radius: 10px;
+  padding: 10px 14px; min-height: 44px; font-size: 15px; cursor: pointer; }
+.work .tmcres button { background: var(--chip); }
+.tmcres button:active { background: var(--press); }
+.warn { background: var(--amber-soft); color: var(--amber); border-radius: 10px; padding: 10px 14px; font-size: 15px; margin-top: 8px; }
+details.more { margin-top: 22px; }
+details.more summary { list-style: none; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 11px 16px; cursor: pointer;
+  background: var(--card); border-radius: 10px; color: var(--text); }
+details.more summary::-webkit-details-marker { display: none; }
+details.more summary small { color: var(--muted); font-size: 15px; }
+details.more summary::after { content: ""; margin-left: auto; width: 8px; height: 8px; border-right: 2px solid var(--muted2); border-bottom: 2px solid var(--muted2);
+  transform: rotate(45deg); margin-top: -4px; transition: transform .2s; }
+details.more[open] summary::after { transform: rotate(-135deg); margin-top: 4px; }
+.actions { display: flex; gap: 10px; margin-top: 22px; } .actions .btn { flex: 1; min-height: 50px; font-size: 17px; border-radius: 14px; }
+.actions.bar { position: sticky; bottom: 0; z-index: 2; background: var(--bar); border-top: .5px solid var(--line);
+  margin: 22px -16px 0; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); }
+.panel > :last-child:not(.bar) { margin-bottom: calc(16px + env(safe-area-inset-bottom)); }
+.delrow { display: block; width: 100%; margin-top: 28px; border: 0; background: var(--card); color: var(--red); border-radius: 10px;
+  min-height: 44px; font-size: 17px; cursor: pointer; }
+.delrow:active { background: var(--press); }
+/* вход */
+.login { max-width: 420px; margin: 0 auto; padding: 24px 16px; text-align: center; }
+.login img { height: 40px; margin: 16px 0 6px; }
+.login h1 { font-size: 28px; font-weight: 700; letter-spacing: .01em; margin: 8px 0 18px; color: var(--strong); }
+.names { background: var(--card); border-radius: 10px; overflow: hidden; text-align: left; margin-top: 16px; }
+.names button { position: relative; width: 100%; border: 0; background: none; min-height: 44px; padding: 11px 16px; font-size: 17px; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center; color: var(--text); }
+.names button + button::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: .5px solid var(--line); }
+.names button:active { background: var(--press); }
+.names button small { color: var(--muted2); font-size: 22px; line-height: 1; }
+.dots { display: flex; justify-content: center; gap: 22px; margin: 22px 0 26px; }
+.dots i { width: 13px; height: 13px; border-radius: 50%; border: 1.5px solid var(--strong); }
+.dots i.on { background: var(--strong); }
+.pad { display: grid; grid-template-columns: repeat(3, 76px); justify-content: center; gap: 16px 26px; margin: 0 auto; }
+.pad button { width: 76px; height: 76px; border: 0; border-radius: 50%; background: var(--chip); color: var(--text); font-size: 32px; font-weight: 400; cursor: pointer; }
+.pad button:active { background: var(--fill2); }
+.pad button[data-act="other"], .pad button[data-act="back"] { background: none; color: var(--red); font-size: 17px; }
+.pad button[data-act="back"] { font-size: 26px; }
+.err { color: var(--bad); min-height: 22px; margin-top: 10px; font-size: 15px; }
+.login .sub { color: var(--muted); font-size: 15px; margin: -8px 0 6px; }
+.credit { text-align: center; color: var(--muted); font-size: 12px; margin: 28px 0 8px; opacity: .8; }
+.link { border: 0; background: none; color: var(--red); font-size: 15px; padding: 10px; margin-top: 6px; cursor: pointer; text-decoration: none; }
+/* заставка при запуске: логотип проявляется, под ним бежит тонкая красная полоса */
+#splash { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: var(--bg);
+  transition: opacity .4s ease, visibility .4s; }
+#splash.out { opacity: 0; visibility: hidden; pointer-events: none; }
+#splash .sp { display: grid; justify-items: center; gap: 20px; animation: spIn .7s cubic-bezier(.2,.7,.2,1) both; }
+#splash img { height: 34px; }
+#splash .bar { position: relative; width: 132px; height: 3px; border-radius: 2px; background: var(--fill2); overflow: hidden; }
+#splash .bar i { position: absolute; top: 0; bottom: 0; left: 0; width: 40%; border-radius: 2px; background: var(--red);
+  animation: spRun 1.1s cubic-bezier(.65,0,.35,1) infinite; }
+#splash .t { font-size: 12px; letter-spacing: .32em; padding-left: .32em; text-transform: uppercase; color: var(--muted); }
+@keyframes spIn { from { opacity: 0; transform: translateY(10px) scale(.97); } }
+@keyframes spRun { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+@media (prefers-reduced-motion: reduce) { #splash .sp, #splash .bar i { animation: none; } }
+#toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 30;
+  display: grid; gap: 6px; width: min(92vw, 520px); pointer-events: none; }
+#nav:not([hidden]) ~ #toast { bottom: calc(74px + env(safe-area-inset-bottom)); }
+#sheet:not([hidden]) ~ #toast { bottom: auto; top: calc(10px + env(safe-area-inset-top)); }   /* не закрывать кнопки формы */
+#toast div { background: var(--toast); color: #fff; border-radius: 14px; padding: 12px 16px; font-size: 15px; box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); animation: up .25s ease; }
+#toast div.bad { background: #C62828; }
+@keyframes up { from { transform: translateY(12px); opacity: 0; } }
+.hint { background: var(--card); border-radius: 10px; padding: 10px 10px 10px 16px; font-size: 15px; margin-top: 12px;
+  display: flex; gap: 8px; align-items: center; }
+.hint .grow { flex: 1; }
+/* фото к записи: лента миниатюр с кнопкой «Фото», просмотр на весь экран */
+.photos { display: flex; gap: 8px; overflow-x: auto; margin-top: 6px; padding-bottom: 2px; }
+.photos img, .photos .add { flex: 0 0 76px; width: 76px; height: 76px; border-radius: 10px; object-fit: cover; background: var(--card); }
+.photos .add { position: relative; display: grid; place-items: center; align-content: center; gap: 2px; font-size: 13px; color: var(--red); cursor: pointer; text-align: center; }
+.photos .add b { font-size: 24px; line-height: 1; }
+.photos .add input { position: absolute; inset: 0; opacity: 0; width: 100%; }
+.pnote { font-size: 13px; color: var(--muted); margin: 8px 16px 0; }
+#pview { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.94); display: grid; place-items: center; }
+#pview[hidden] { display: none; }
+#pview img { max-width: 100vw; max-height: 84vh; object-fit: contain; }
+#pview .bar { position: absolute; left: 0; right: 0; bottom: calc(14px + env(safe-area-inset-bottom)); display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; padding: 0 10px; color: #ccc; font-size: 13px; }
+.online { font-size: 13px; color: var(--muted); margin: 10px 16px 0; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green); margin-right: 5px; }
+/* выполненные работы -- как таблица тех. отчёта: описание, начало/окончание, ФИО */
+.insp { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; margin: 0 16px; font-size: 15px; }
+.insp .seg button { padding: 0 10px; white-space: nowrap; color: inherit; }
+.pins { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 0 16px; }
+.pins small { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; text-align: center; }
+.pins .inp { text-align: center; padding-left: 4px; padding-right: 4px; }
+.sec { display: flex; align-items: baseline; gap: 8px; margin: 22px 16px 7px; }
+.sec h3 { margin: 0; font-size: 13px; font-weight: 400; text-transform: uppercase; letter-spacing: .02em; color: var(--muted); }
+.sec .rows { margin-left: auto; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sec .rows.full { color: var(--amber); font-weight: 600; }
+.work { background: var(--card); border-radius: 10px; padding: 4px 16px 14px; margin-top: 10px; }
+.work .wh { display: flex; align-items: center; gap: 8px; min-height: 40px; }
+.work .wh b { font-size: 15px; font-weight: 600; color: var(--strong); }
+.work .wh .iconbtn { margin: 0 -10px 0 auto; width: 40px; height: 40px; font-size: 17px; color: var(--muted); }
+.work label.f { margin: 14px 0 6px; }
+.work .inp { background: var(--chip); }
+.work textarea.inp { min-height: 96px; }
+.work .pnote { margin-left: 0; }
+.tmw { display: grid; gap: 8px; }
+.tmw .cell { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.tmw .cap { flex: 1; min-width: 0; font-size: 15px; }
+.tmw .tval { flex: none; width: 86px; min-height: 40px; padding: 6px; text-align: center; font-size: 20px; font-weight: 600; }
+.tmw .btn { min-height: 34px; padding: 6px 12px; font-size: 15px; border-radius: 17px; }
+.tot { margin-top: 10px; font-size: 15px; color: var(--muted); }
+.tot b { color: var(--strong); font-weight: 600; font-variant-numeric: tabular-nums; }
+.addw { width: 100%; margin-top: 10px; border: 0; background: var(--card); min-height: 44px; border-radius: 10px; padding: 0 16px; text-align: left;
+  font-size: 17px; color: var(--red); cursor: pointer; }
+.addw:active { background: var(--press); }
+/* барабаны выбора даты и времени -- как в iOS */
+#tpick { position: fixed; inset: 0; z-index: 25; background: var(--scrim); display: flex; align-items: flex-end; justify-content: center; animation: fade .2s; }
+#tpick[hidden] { display: none; }
+.tsheet { width: 100%; max-width: 520px; background: var(--card); border-radius: 14px 14px 0 0; padding-bottom: env(safe-area-inset-bottom);
+  animation: tUp .28s cubic-bezier(.2,.8,.2,1); }
+@keyframes tUp { from { transform: translateY(100%); } }
+.tbar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 4px 8px; border-bottom: .5px solid var(--line); }
+.tbar b { font-weight: 600; text-align: center; }
+.wheels { position: relative; display: flex; justify-content: center; padding: 8px 12px 16px; height: 240px; }
+.wheels::before { content: ""; position: absolute; left: 12px; right: 12px; top: 98px; height: 36px; background: var(--chip); border-radius: 8px; pointer-events: none; }
+.wheel { position: relative; height: 216px; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; flex: 1; max-width: 110px;
+  -webkit-mask-image: linear-gradient(transparent, #000 30%, #000 70%, transparent); mask-image: linear-gradient(transparent, #000 30%, #000 70%, transparent); }
+.wheel.day { max-width: 170px; flex: 1.6; }
+.wheel::-webkit-scrollbar { display: none; }
+.wheel .wsp { height: 90px; }
+.wheel .it { height: 36px; line-height: 36px; text-align: center; font-size: 22px; scroll-snap-align: center; font-variant-numeric: tabular-nums;
+  color: var(--muted); cursor: pointer; white-space: nowrap; }
+.wheel.day .it { font-size: 19px; }
+.wheel .it.sel { color: var(--text); }
+.colon { align-self: center; font-size: 22px; font-weight: 600; margin-top: -8px; }
+.tclear { display: block; width: calc(100% - 32px); margin: 0 16px 12px; border: 0; background: var(--chip); color: var(--red); border-radius: 12px;
+  min-height: 44px; font-size: 17px; cursor: pointer; }
+.tclear[hidden] { display: none; }
+/* ---------- демо и аналитика ---------- */
+.demo { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 10px 0 0; padding: 8px 12px; border-radius: 10px;
+  background: var(--red-soft); color: var(--text); font-size: 13px; }
+.demo b { color: var(--red); }
+.demo .grow { flex: 1; min-width: 160px; }
+.demo button { border: 0; background: var(--card); color: var(--red); border-radius: 8px; min-height: 32px; padding: 4px 10px; font-size: 13px; cursor: pointer; }
+.demoacc { margin-top: 18px; text-align: left; }
+.demoacc h3 { font-size: 13px; font-weight: 400; text-transform: uppercase; color: var(--muted); margin: 14px 4px 6px; }
+.demoacc .names button small { color: var(--muted); font-size: 13px; white-space: nowrap; margin-left: 8px; }
+.kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+@media (min-width: 560px) { .kpis { grid-template-columns: repeat(4, 1fr); } }
+.kpi { background: var(--card); border-radius: 12px; padding: 12px 14px; min-width: 0; }
+.kpi .v { font-size: 26px; font-weight: 700; color: var(--strong); font-variant-numeric: tabular-nums; line-height: 1.15; }
+.kpi .v small { font-size: 15px; font-weight: 600; }
+.kpi .l { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.chart { background: var(--card); border-radius: 12px; padding: 12px 14px; }
+.chart .cap { font-size: 13px; color: var(--muted); min-height: 18px; }
+.cols { display: flex; align-items: flex-end; gap: 2px; height: 120px; margin-top: 8px; border-bottom: 1px solid var(--line); }
+.cols button { flex: 1; min-width: 0; height: 100%; border: 0; padding: 0; background: none; display: flex; align-items: flex-end; cursor: pointer; }
+.cols button i { display: block; width: 100%; background: var(--red); border-radius: 3px 3px 0 0; min-height: 2px; opacity: .85; }
+.cols button.on i, .cols button:hover i { opacity: 1; box-shadow: 0 0 0 2px var(--card), 0 0 0 3px var(--red); }
+.axis { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.hb { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(48px, 1fr) auto; align-items: center; gap: 4px 10px; font-size: 15px; padding: 5px 0; }
+.hb .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hb .t small { color: var(--muted); font-size: 12px; }
+.hb .bar { height: 10px; border-radius: 0 4px 4px 0; background: var(--chip); overflow: hidden; }
+.hb .bar i { display: block; height: 100%; background: var(--red); border-radius: 0 4px 4px 0; }
+.hb .val { font-variant-numeric: tabular-nums; color: var(--text); font-size: 14px; white-space: nowrap; }
+.anote { font-size: 13px; color: var(--muted); margin: 8px 2px 0; }
+</style>
+</head>
+<body>
+<header id="top" hidden>
+  <img class="logo" src="logo.png" alt="Ремзона">
+  <div class="who"><b id="whoName"></b><span id="conn">…</span></div>
+  <button class="iconbtn" data-act="theme" id="themeBtn"></button>
+  <button class="iconbtn" data-act="logout" id="outBtn" title="Выйти"></button>
+</header>
+<div id="splash" aria-hidden="true"><div class="sp"><img class="logo" src="logo.png" alt=""><div class="bar"><i></i></div><div class="t">Ремзона</div></div></div>
+<main id="app"></main>
+<div id="sheet" hidden><div class="panel" id="panel"></div></div>
+<div id="tpick" hidden><div class="tsheet"><div class="tbar"><button class="nb" data-act="tpcancel">Отмена</button><b id="tpTitle"></b><button class="nb r" data-act="tpdone">Готово</button></div>
+  <div class="wheels" id="wheels"></div><button class="tclear" id="tpClear" data-act="tpclear" hidden>Очистить</button></div></div>
+<div id="pview" hidden></div>
+<nav id="nav" hidden></nav>
+<div id="toast"></div>
+
+<script src="demo-backend.js"></script>
+<script>
+"use strict";
+// ---------- настройки ----------
+// демо-версия: облачной базы нет, запросы обрабатывает demo-backend.js в этом браузере
+const SB_URL = "demo", SB_KEY = "demo";
+const KINDS = ["Ремонт", "ТО", "Долив", "Диагностика"];
+const WAITS = ["Нет водителя", "Распоряжение диспетчера", "Пересменка / обед"];   // готова, ждёт не по нашей вине; + «Другое» текстом
+// участки: каждый видит работы своего участка (ограничение на сервере), участок меняет сам; в книгу Excel -- только Севернытный
+const SITES = ["Северный", "Южный"], EXCEL_SITE = "Северный";
+const CREDIT = `<div class="credit">Разработчик — Умаров Р.К.</div>`;   // подпись создателя (решение пользователя 31.10.2026)
+const DAY_START = 7, NIGHT_START = 19;          // смены: 1 -- ночь 19:00–7:00 (дата окончания), 2 -- день
+const KEEP_DAYS = 3;                            // закрытые записи в ленте -- за последние сутки×3
+const LONG_MS = 24 * 3600000;                   // долгострой (01.11.2026, решение пользователя): на площадке дольше суток -- в отдельном окне
+// вкладка записи (jobs.area): откуда создана, не по виду работ -- на ТО бывают доливы и ремонты; запись без area (кэш до обновления) -- по виду
+const areaOf = (j) => j.area || (j.kind === "ТО" ? "ТО" : "Площадка");
+
+// запрос к серверу -- не дольше 15 с: при плохой связи не висим (ошибка «нет связи», очередь повторит)
+const fetchT = (url, opt = {}) => {
+  // фото и прайс при плохой связи идут дольше -- 60 с (04.11.2026: фото 600 КБ не успевало за 15 с на медленном канале)
+  const ms = /\/storage\/v1\/object\/photos\/|\/rpc\/tmc_list/.test(String(url)) ? 60000 : 15000;
+  const ac = new AbortController(), t = setTimeout(() => ac.abort(), ms);
+  opt.signal?.addEventListener("abort", () => ac.abort());
+  return fetch(url, { ...opt, signal: ac.signal })
+    .catch((e) => { throw ac.signal.aborted ? new TypeError("Failed to fetch (timeout)") : e; }).finally(() => clearTimeout(t));
+};
+const sb = supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, storageKey: "rz_auth" }, global: { fetch: fetchT } });
+const pinPassword = (pin, login) => `rz-${pin}-${login}`;
+
+const load = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch { return d; } };
+const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+const S = {
+  me: null, machines: load("rz_machines", []), workers: load("rz_workers", []), jobs: new Map(load("rz_jobs", []).map((j) => [j.id, j])), staff: [],
+  queue: load("rz_queue", []), tab: "feed", view: "yard", seen: load("rz_seen", 0), rt: "", channel: null, edit: null, flushing: null,
+  photos: new Map(), purl: new Map(), purlAt: 0, upl: "", pres: null, online: new Set(),   // фото по записям; кто сейчас в приложении
+};
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const isAdmin = () => S.me?.role === "admin";
+// ФИО как в таблицах: «метелкин а в», «Метелкин Андрей Викторович» → «Метелкин А.В.»; не по-русски / без инициалов -- ""
+const fio = (s) => {
+  let p = String(s || "").split(/[\s.]+/).filter(Boolean);
+  if (p.length === 2 && /^[А-ЯЁ]{2}$/.test(p[1])) p = [p[0], p[1][0], p[1][1]];
+  if (p.length < 2 || p.length > 3 || !p.every((w) => /^[а-яё]+(-[а-яё]+)*$/i.test(w)) || p[0].length < 2) return "";
+  const cap = (w) => w[0].toUpperCase() + w.slice(1).toLowerCase();
+  return `${p[0].split("-").map(cap).join("-")} ${p.slice(1).map((w) => w[0].toUpperCase() + ".").join("")}`;
+};
+const FIO_ERR = "ФИО — как в таблицах: Фамилия И.О., например Иванов И.И.";
+const netErr = (e) => !navigator.onLine || /fetch|network|load failed|timeout|offline/i.test(String(e?.message || e));
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : "x" + Date.now().toString(36) + Math.random().toString(36).slice(2));
+
+// ---------- время и смены ----------
+const pad2 = (n) => String(n).padStart(2, "0");
+const dm = (d) => `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}`;
+const hm = (d) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+const fmt = (iso) => { if (!iso) return ""; const d = new Date(iso); return `${dm(d)} ${hm(d)}`; };
+const toInput = (iso) => { if (!iso) return ""; const d = new Date(iso);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${hm(d)}`; };
+const fromInput = (v) => (v ? new Date(v).toISOString() : null);
+function dur(a, b) {
+  let m = Math.max(0, Math.round(((b ? new Date(b) : new Date()) - new Date(a)) / 60000));
+  const d = Math.floor(m / 1440); m -= d * 1440; const h = Math.floor(m / 60); m -= h * 60;
+  return d ? `${d} д ${h} ч` : h ? `${h} ч ${m} мин` : `${m} мин`;
+}
+// время на карточке: «2:35», больше суток -- «1 д 3 ч»
+function clock(a, b) {
+  let m = Math.max(0, Math.floor(((b ? new Date(b) : new Date()) - new Date(a)) / 60000));
+  const d = Math.floor(m / 1440); m -= d * 1440; const h = Math.floor(m / 60); m -= h * 60;
+  return d ? `${d} д ${h} ч` : `${h}:${pad2(m)}`;
+}
+// администратору: сейчас в приложении (Presence) или когда был (staff.last_seen)
+function seenTxt(s) {
+  if (S.online.has(s.id)) return `<span class="dot"></span>в приложении`;
+  if (!s.last_seen) return "не заходил";
+  const m = (Date.now() - new Date(s.last_seen)) / 60000;
+  return m < 3 ? "был только что" : m < 720 ? `был ${dur(s.last_seen)} назад` : `был ${when(s.last_seen)}`;
+}
+function shiftOf(t = new Date()) {
+  const d = new Date(t); const h = d.getHours();
+  if (h >= NIGHT_START) { const n = new Date(d); n.setDate(n.getDate() + 1); n.setHours(0, 0, 0, 0);
+    const st = new Date(d); st.setHours(NIGHT_START, 0, 0, 0); return { date: n, n: 1, start: st }; }
+  if (h < DAY_START) { const st = new Date(d); st.setDate(st.getDate() - 1); st.setHours(NIGHT_START, 0, 0, 0);
+    const n = new Date(d); n.setHours(0, 0, 0, 0); return { date: n, n: 1, start: st }; }
+  const st = new Date(d); st.setHours(DAY_START, 0, 0, 0); const n = new Date(d); n.setHours(0, 0, 0, 0); return { date: n, n: 2, start: st };
+}
+// свою смену механик выбирает сам (30.10.2026, решение пользователя: на пересменке ночной видит свою) -- rz_shift = начало
+// выбранной; выбор действует от 4 ч до её начала до 4 ч после конца, дальше -- снова по часам. В книгу смена не идёт.
+const SHIFT_LEN = 12 * 3600000, SHIFT_SLACK = 4 * 3600000;
+function myShift(now = new Date()) {
+  const s = load("rz_shift", 0);
+  return s && now - s >= -SHIFT_SLACK && now - s <= SHIFT_LEN + SHIFT_SLACK ? shiftOf(new Date(s + 60000)) : shiftOf(now);
+}
+// смена работы в jobs.steps (поле d, «гггг-мм-дд/смена»): показать в прошлой смене только её работы; to_report и бланк d не берут
+const shKey = (sh) => `${sh.date.getFullYear()}-${pad2(sh.date.getMonth() + 1)}-${pad2(sh.date.getDate())}/${sh.n}`;
+function stKey(from) {   // начало работы приходится на другую смену, чем выбранная, -- значит, вписывают за прошедшую
+  const sh = myShift(); if (!isHm(from)) return shKey(sh);
+  const h = +from.slice(0, 2), n = h >= DAY_START && h < NIGHT_START ? 2 : 1;
+  return shKey(n === sh.n ? sh : shiftOf(new Date(sh.start.getTime() - 60000)));
+}
+function pickShift(n) {
+  const now = new Date(), auto = shiftOf(now), st = auto.start.getTime();
+  // выбрана не та, что по часам, -- ближайшая из соседних: только что кончившаяся или следующая
+  save("rz_shift", n === auto.n ? 0 : now - st <= st + SHIFT_LEN - now ? st - SHIFT_LEN : st + SHIFT_LEN);
+  render();
+}
+const when = (iso) => { const d = new Date(iso); return d.toDateString() === new Date().toDateString() ? hm(d) : `${dm(d)} ${hm(d)}`; };
+
+// ---------- значки и тема ----------
+const ICON = {
+  out: '<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5"/><path d="M5 12h11"/>',
+  moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  feed: '<path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.5" cy="6" r="1.2"/><circle cx="4.5" cy="12" r="1.2"/><circle cx="4.5" cy="18" r="1.2"/>',
+  wrench: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8V21h3.2l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',
+  people: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2a6.5 6.5 0 0 1 3.5 5.8"/>',
+  cam: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  truck: '<path d="M3 6h11v10H3z"/><path d="M14 9h4l3 3.5V16h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
+};
+const svg = (p) => `<svg class="i" viewBox="0 0 24 24">${p}</svg>`;
+// тема: по настройке телефона, кнопка в шапке переключает и запоминает
+const darkMQ = matchMedia("(prefers-color-scheme: dark)");
+const isDark = () => { const t = load("rz_theme", "auto"); return t === "dark" || (t === "auto" && darkMQ.matches); };
+function applyTheme() {
+  const t = load("rz_theme", "auto"), r = document.documentElement;
+  if (t === "auto") delete r.dataset.theme; else r.dataset.theme = t;
+  const dark = isDark();
+  $("#themeBtn").innerHTML = svg(dark ? ICON.sun : ICON.moon); $("#themeBtn").title = dark ? "Светлая тема" : "Тёмная тема";
+  document.querySelector('meta[name="theme-color"]').content = dark ? "#161616" : "#F9F9F9";
+}
+darkMQ.addEventListener?.("change", applyTheme);
+
+// ---------- заставка: убрать после первого экрана, но не раньше 0,9 с от открытия (анимация успевает пройти) ----------
+function hideSplash() {
+  const el = $("#splash"); if (!el || el.classList.contains("out")) return;
+  setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 450); }, Math.max(0, 300 - performance.now()));
+}
+setTimeout(hideSplash, 8000);   // страховка, если связь зависла
+
+// ---------- уведомления ----------
+function toast(msg, bad) {
+  const el = document.createElement("div"); el.textContent = msg; if (bad) el.className = "bad";
+  $("#toast").appendChild(el); setTimeout(() => el.remove(), bad ? 6000 : 4000);
+}
+let audioCtx = null;
+function beep() {
+  try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.frequency.value = 880; o.connect(g); g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(0.18, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+    o.start(); o.stop(audioCtx.currentTime + 0.36); } catch {}
+}
+async function sysNotify(title, body) {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  try { const reg = await navigator.serviceWorker?.getRegistration(); if (reg) reg.showNotification(title, { body, icon: "icon-192.png", tag: title, renotify: true });
+    else new Notification(title, { body, icon: "icon-192.png" }); } catch {}
+}
+// Web Push: уведомления администратору, даже когда приложение закрыто (сервер: push_subs, триггер jobs_push, функция push);
+// на iPhone -- только в приложении с экрана «Домой»
+const VAPID = "";
+const pushOk = () => false;   // демо: Web Push с сервера нет, уведомления -- в открытом приложении
+async function pushOn(ask) {
+  if (!isAdmin() || !pushOk()) return;
+  if (ask && Notification.permission === "default") await Notification.requestPermission();
+  if (Notification.permission !== "granted") return;
+  const reg = await navigator.serviceWorker.ready;
+  const sub = await reg.pushManager.getSubscription() || await reg.pushManager.subscribe({ userVisibleOnly: true,
+    applicationServerKey: Uint8Array.from(atob(VAPID.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0)) });
+  const k = sub.toJSON().keys;
+  const { error } = await sb.rpc("push_save", { p_endpoint: sub.endpoint, p_p256dh: k.p256dh, p_auth: k.auth });
+  if (error) throw error;
+  S.push = true;
+}
+async function pushOff() {   // выход: этот телефон больше не получает уведомления
+  if (!S.push) return;
+  try { const sub = await (await navigator.serviceWorker.ready).pushManager.getSubscription();
+    if (sub) { await sb.rpc("push_drop", { p_endpoint: sub.endpoint }); await sub.unsubscribe(); } } catch {}
+  S.push = false;
+}
+// «зеркало» из книги, созданное или обновлённое кнопкой «Из приложения» (rev = imported_rev) -- без звука и не «новое»
+const fromBook = (j) => j.client_id?.startsWith("xl:") && j.rev === j.imported_rev;
+function announce(row, prev) {
+  if (!S.me || row.mechanic_id === S.me.id || fromBook(row)) return;
+  const what = !prev ? (row.rev > 1 ? "обновлено" : "заезд") : (!prev.ended_at && row.ended_at) ? "выезд" : (!prev.ready_at && row.ready_at) ? "готова, ждёт: " + (row.wait_reason || "—").toLowerCase() : "дополнено";
+  const msg = `${row.gar} — ${what}${row.mechanic_name ? " · " + row.mechanic_name : ""}`;
+  toast(msg); beep(); navigator.vibrate?.([120, 60, 120]);
+  // с Web Push уведомление при свёрнутом приложении покажет sw.js
+  if (document.hidden && !S.push) sysNotify("Ремзона: " + msg, [row.kind, row.fault || row.work].filter(Boolean).join(" · "));
+  document.title = `(${newCount()}) Ремзона`;
+}
+
+// ---------- очередь записи (без связи копится, уходит при появлении) ----------
+function saveQ() { save("rz_queue", S.queue); renderConn(); }
+function enqueue(cid, data, isNew, id) {
+  const ex = S.queue.find((q) => (cid ? q.cid === cid : !q.cid && q.id === id));
+  if (ex) Object.assign(ex.data, data); else S.queue.push({ cid, id, isNew, data });
+  saveQ(); render(); flush();
+}
+// истёк вход (JWT) -- запись не теряем, повторим после обновления входа
+const authErr = (r) => r.status === 401 || /^PGRST30/.test(r.error?.code || "");
+// одна отправка за раз; refresh ждёт её, прежде чем перечитать записи (иначе только что отправленная пропала бы до обновления)
+function flush() {
+  if (!S.flushing && S.queue.length && S.me) S.flushing = sendQueue();
+  return S.flushing || Promise.resolve();
+}
+async function sendQueue() {
+  try {
+    // без действующего входа сервер отказал бы и запись пропала -- ждём, вход обновится сам, когда будет связь
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    while (S.queue.length) {
+      const q = S.queue[0], sent = JSON.stringify(q.data); let res;
+      if (q.isNew) res = await sb.from("jobs").upsert({ ...q.data, client_id: q.cid }, { onConflict: "client_id" }).select().single();
+      else if (q.cid) res = await sb.from("jobs").update(q.data).eq("client_id", q.cid).select().single();
+      else res = await sb.from("jobs").update(q.data).eq("id", q.id).select().single();
+      if (res.error) {
+        // сбой сервера (5xx), перегрузка, таймаут -- запись не терять, повторить (04.11.2026: раньше такая запись пропадала из очереди)
+        if (netErr(res.error) || authErr(res) || res.status >= 500 || res.status === 429 || res.status === 408) break;
+        // PGRST116 -- записи на сервере уже нет (удалили / убрана после переноса в книгу)
+        toast(res.error.code === "PGRST116" && !q.isNew ? `${q.data.gar || "Запись"}: запись уже удалена — изменения не сохранены`
+          : "Не сохранено (" + (q.data.gar || "") + "): " + res.error.message, true);
+      } else if (res.data.deleted && !q.data.deleted) {
+        toast(`${res.data.gar}: запись уже удалена — изменения не сохранены`, true); S.jobs.delete(res.data.id);
+      } else {
+        S.jobs.set(res.data.id, res.data);
+        if (S.edit?.j?.id === res.data.id) S.edit.rev = res.data.rev;   // своё изменение, ушедшее при открытой карточке, -- не «чужое»
+        // пока запрос шёл, запись дополнили -- дополнение отправить следующим запросом, а не потерять
+        if (JSON.stringify(q.data) !== sent) { q.isNew = false; saveQ(); continue; }
+      }
+      S.queue.shift(); saveQ();
+    }
+  } finally { S.flushing = null; cacheJobs(); renderConn(); renderSoft(); retryLater(); }
+}
+// пока очередь не пуста -- повтор через 5 с, 10, 20 … 60 с: связь вернулась -- уходит в ближайшую попытку
+let retryT = null, retryMs = 5000;
+function retryLater(now) {
+  if (now || !S.queue.length) { clearTimeout(retryT); retryT = null; retryMs = 5000; }
+  if (now) return flush();
+  if (retryT || !S.queue.length) return;
+  retryT = setTimeout(() => { retryT = null; retryMs = Math.min(retryMs * 2, 60000); flush(); }, retryMs);
+}
+// записи с учётом неотправленного
+function allJobs() {
+  const m = new Map(S.jobs);
+  for (const q of S.queue) {
+    let j = [...m.values()].find((x) => (q.cid && x.client_id === q.cid) || (q.id && x.id === q.id));
+    if (j) m.set(j.id, { ...j, ...q.data, pending: true });
+    else if (q.isNew) m.set("q:" + q.cid, { id: "q:" + q.cid, client_id: q.cid, mechanic_id: S.me?.id, mechanic_name: S.me?.name,
+      rev: 1, imported_rev: 0, updated_at: new Date().toISOString(), ...q.data, pending: true });
+  }
+  return [...m.values()].filter((j) => !j.deleted);
+}
+const cacheJobs = () => save("rz_jobs", [...S.jobs.values()]);
+
+// ---------- данные ----------
+async function loadAll() {
+  // без действующего входа сервер отдал бы пустые списки -- экран и кэш остались бы без машин и записей
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+  const since =new Date(Date.now() - KEEP_DAYS * 86400000).toISOString();
+  const [m, j, st, inv, ph, wk] = await Promise.all([
+    sb.from("machines").select("*").order("gar"),
+    sb.from("jobs").select("*").eq("deleted", false).or(`ended_at.is.null,updated_at.gte.${since}`).order("started_at", { ascending: false }).limit(500),
+    isAdmin() ? sb.from("staff").select("*").order("role", { ascending: false }).order("name") : Promise.resolve({ data: [] }),
+    isAdmin() ? sb.from("invite").select("code").maybeSingle() : Promise.resolve({ data: null }),
+    sb.from("photos").select("id,job_id,path,staff_id,created_at").not("job_id", "is", null).order("created_at"),
+    sb.from("workers").select("id,name,grp,active").order("name"),
+  ]);
+  if (!ph.error) { S.photos = new Map(); ph.data.forEach(addPhoto); }
+  if (!wk.error) { S.workers = wk.data; save("rz_workers", S.workers); }
+  S.invite = inv.data?.code || "";
+  if (m.error || j.error) throw (m.error || j.error);
+  S.machines = m.data; save("rz_machines", S.machines);
+  S.jobs = new Map(j.data.map((x) => [x.id, x])); cacheJobs();
+  S.staff = st.data || [];
+}
+function subscribe() {
+  if (S.channel) sb.removeChannel(S.channel);
+  const tok = S.rtTok = uuid();   // сообщение о закрытии прежнего канала не должно менять состояние нового
+  S.channel = sb.channel("jobs-" + uuid()).on("postgres_changes", { event: "*", schema: "public", table: "jobs" }, (p) => {
+    if (p.eventType === "DELETE") { S.jobs.delete(p.old?.id); }
+    else {
+      const row = p.new, prev = S.jobs.get(row.id);
+      if (row.deleted) S.jobs.delete(row.id); else S.jobs.set(row.id, row);
+      if (!row.deleted && (!prev || prev.rev !== row.rev)) announce(row, prev);
+    }
+    cacheJobs(); renderSoft();
+  }).on("postgres_changes", { event: "*", schema: "public", table: "photos" }, (p) => {
+    if (p.eventType === "DELETE") dropPhoto(p.old?.id); else if (p.new.job_id) addPhoto(p.new);
+    renderSoft(); drawPhotos();
+  }).subscribe((status) => { if (tok === S.rtTok) { S.rt = status; renderConn(); } });
+  // кто сейчас в приложении (Realtime Presence): в канале участка только id сотрудника, имена -- из списка у администратора
+  if (S.pres) sb.removeChannel(S.pres);
+  const pres = S.pres = sb.channel("online-" + S.me.site, { config: { presence: { key: S.me.id } } })
+    .on("presence", { event: "sync" }, () => {
+      S.online = new Set(Object.keys(pres.presenceState()));
+      if (isAdmin() && !document.activeElement?.matches("input, textarea")) render();
+    }).subscribe((st) => { if (st === "SUBSCRIBED") pres.track({}); });
+}
+
+// ---------- вход ----------
+// списка сотрудников на странице нет: фамилию вводят, сервер отдаёт только совпадения (login_find)
+localStorage.removeItem("rz_logins"); localStorage.removeItem("rz_last");
+// ссылка «…/?join=КОД» сразу открывает регистрацию с кодом-приглашением (её администратор рассылает сотрудникам)
+const JOIN = new URLSearchParams(location.search).get("join");
+let L = { pick: load("rz_pick", null), found: [], q: "", first: false, pin: "", err: "", code: JOIN || "",
+  mode: JOIN !== null && !load("rz_pick", null) ? "signup" : "" };
+async function showLogin(msg) {
+  S.me = null; $("#top").hidden = true; $("#nav").hidden = true; document.title = "Ремзона";
+  L.err = msg || ""; L.pin = ""; L.found = [];
+  try { const { data, error } = await sb.rpc("staff_exists"); if (error) throw error; L.first = !data; }
+  catch (e) { L.first = false; if (!L.pick) L.err = "Нет связи с сервером. Проверьте интернет."; }
+  renderLogin();
+}
+async function findName() {
+  L.q = $("#lName").value.trim();
+  if (L.q.length < 2) { L.err = "Введите фамилию"; return renderLogin(); }
+  L.err = "Поиск…"; renderLogin();
+  const { data, error } = await sb.rpc("login_find", { p_name: L.q });
+  if (error) { L.found = []; L.err = netErr(error) ? "Нет связи с сервером" : error.message; return renderLogin(); }
+  L.found = data || [];
+  if (L.found.length === 1) { L.pick = L.found[0]; L.err = ""; }
+  else L.err = L.found.length ? "Выберите себя" : "Не найдено — проверьте фамилию или обратитесь к администратору";
+  renderLogin();
+}
+function renderLogin() {
+  const app = $("#app"); hideSplash();
+  if (L.first) {
+    app.innerHTML = `<div class="login"><img class="logo" src="logo.png" alt=""><h1>Первый запуск</h1>
+      <p style="color:var(--muted);font-size:15px">Создайте учётную запись сервисного администратора. Механиков он добавит сам.</p>
+      <label class="f" style="text-align:left">Фамилия И.О. (как в таблицах)</label><input class="inp" id="bName" placeholder="Умаров Р.К.">
+      <label class="f" style="text-align:left">PIN — 4 цифры</label><input class="inp" id="bPin" inputmode="numeric" maxlength="4" type="password">
+      <label class="f" style="text-align:left">PIN ещё раз</label><input class="inp" id="bPin2" inputmode="numeric" maxlength="4" type="password">
+      <button class="big" data-act="bootstrap">Создать администратора</button><div class="err" id="lerr"></div></div>${CREDIT}`;
+    return;
+  }
+  if (L.mode === "signup") {
+    app.innerHTML = `<div class="login"><img class="logo" src="logo.png" alt=""><h1>Регистрация</h1>
+      <p class="sub">По приглашению администратора — вход сразу после регистрации.</p>
+      <label class="f" style="text-align:left">Код приглашения</label><input class="inp" id="sCode" autocomplete="off" autocapitalize="characters" maxlength="6" placeholder="Из ссылки администратора" style="text-transform:uppercase;letter-spacing:.2em">
+      <label class="f" style="text-align:left">Участок</label><div class="seg two" id="sSite">${SITES.map((s) => `<button class="${L.site === s ? "on" : ""}" data-act="ssite" data-v="${s}">${s}</button>`).join("")}</div>
+      <label class="f" style="text-align:left">Фамилия И.О. (как в таблицах)</label><input class="inp" id="sName" autocomplete="off" placeholder="Иванов И.И.">
+      <label class="f" style="text-align:left">Придумайте PIN — 4 цифры</label><input class="inp" id="sPin" inputmode="numeric" maxlength="4" type="password">
+      <label class="f" style="text-align:left">PIN ещё раз</label><input class="inp" id="sPin2" inputmode="numeric" maxlength="4" type="password">
+      <button class="big" data-act="signup">Зарегистрироваться</button><div class="err" id="lerr"></div>
+      <button class="link" data-act="tologin">Уже есть учётная запись — войти</button></div>${CREDIT}`;
+    $("#sCode").value = L.code;
+    return;
+  }
+  if (!L.pick) {
+    const names = L.found.length > 1 ? `<div class="names">${L.found.map((x) => `<button data-act="pick" data-login="${esc(x.login)}">${esc(x.name)}<small>›</small></button>`).join("")}</div>` : "";
+    app.innerHTML = `<div class="login"><img class="logo" src="logo.png" alt=""><h1>Ремзона — вход</h1>
+      <label class="f" style="text-align:left">Фамилия</label><input class="inp" id="lName" autocomplete="off" placeholder="Например, Иванов">
+      <button class="big" data-act="find">Далее</button>${names}<div class="err">${esc(L.err)}</div>
+      <button class="link" data-act="tosignup">Нет учётной записи? Зарегистрироваться</button>${demoLogin()}</div>${CREDIT}`;
+    $("#lName").value = L.q;
+    return;
+  }
+  app.innerHTML = `<div class="login"><img class="logo" src="logo.png" alt=""><h1>${esc(L.pick.name)}</h1>
+    <div style="color:var(--muted)">Введите PIN${window.REMZONA_DEMO ? ` · в демо: <b>${REMZONA_DEMO.pin}</b>` : ""}</div>
+    <div class="dots">${[0, 1, 2, 3].map((i) => `<i class="${i < L.pin.length ? "on" : ""}"></i>`).join("")}</div>
+    <div class="pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `<button data-act="digit" data-d="${n}">${n}</button>`).join("")}
+      <button data-act="other" style="font-size:15px">Другой</button><button data-act="digit" data-d="0">0</button><button data-act="back">⌫</button></div>
+    <div class="err">${esc(L.err)}</div></div>${CREDIT}`;
+}
+async function tryPin() {
+  const p = L.pick, pin = L.pin;
+  L.err = "Вход…"; renderLogin();
+  const { error } = await sb.auth.signInWithPassword({ email: `${p.login}@remzona.app`, password: pinPassword(pin, p.login) });
+  if (error) { L.pin = ""; L.err = /invalid/i.test(error.message) ? "Неверный PIN" : netErr(error) ? "Нет связи с сервером" : error.status === 429 || /rate limit|too many/i.test(error.message) ? "Слишком много попыток — подождите несколько минут" : error.message; renderLogin(); return; }
+  save("rz_pick", p); L.pin = ""; L.err = "";
+  await enter();
+}
+async function signup() {
+  const name = fio($("#sName").value), pin = $("#sPin").value.trim(), pin2 = $("#sPin2").value.trim();
+  const code = $("#sCode").value.trim().toUpperCase();
+  const err = (m) => { $("#lerr").textContent = m; };
+  if (code.length !== 6) return err("Код приглашения — 6 знаков из ссылки администратора");
+  if (!L.site) return err("Выберите участок");
+  if (!name) return err(FIO_ERR);
+  if (!/^\d{4}$/.test(pin)) return err("PIN — ровно 4 цифры");
+  if (pin !== pin2) return err("PIN не совпадает");
+  err("Регистрирую…");
+  const r = await callAdmin({ action: "signup", name, pin, code, site: L.site });
+  if (r.error) return err(r.error);
+  // доступ открыт сразу -- входим тем же PIN
+  L.pick = { name, login: r.login, role: "mechanic" }; L.mode = ""; L.code = ""; L.pin = pin;
+  history.replaceState(null, "", location.pathname);
+  tryPin();
+}
+async function bootstrap() {
+  const name = fio($("#bName").value), pin = $("#bPin").value.trim(), pin2 = $("#bPin2").value.trim();
+  const err = (m) => { $("#lerr").textContent = m; };
+  if (!name) return err(FIO_ERR);
+  if (!/^\d{4}$/.test(pin)) return err("PIN — ровно 4 цифры");
+  if (pin !== pin2) return err("PIN не совпадает");
+  err("Создаю…");
+  const r = await callAdmin({ action: "bootstrap", name, pin });
+  if (r.error) return err(r.error);
+  L.first = false; L.pick = { name, login: r.login, role: "admin" }; L.pin = pin; await tryPin();
+}
+
+function start(me) {
+  const first = !S.me || S.me.role !== me.role;
+  S.me = me; save("rz_me", me);
+  $("#top").hidden = false; $("#whoName").textContent = me.name;
+  if (first) S.tab = isAdmin() ? "feed" : "main";
+  render();
+}
+async function enter() {
+  // быстрый старт: сохранённые на телефоне вход, профиль, машины и записи -- экран сразу, сверка с сервером следом
+  const uid = load("rz_auth", null)?.user?.id, cached = load("rz_me", null);
+  const quick = !!uid && cached?.id === uid && !!cached.active;
+  if (quick) start(cached);
+  const { data: { session }, error } = await sb.auth.getSession();
+  if (!session) {
+    // вход истёк, а обновить его нет связи -- работаем с сохранённым, очередь уйдёт, когда связь вернётся
+    if (quick && error && netErr(error)) { renderConn(); retryLater(); return; }
+    return showLogin();
+  }
+  let me = null;
+  const r = await sb.from("staff").select("*").eq("id", session.user.id).maybeSingle();
+  if (r.error && netErr(r.error)) { const c = load("rz_me", null); if (c && c.id === session.user.id) me = c; }
+  else me = r.data;
+  if (!me || !me.active) { await sb.auth.signOut(); return showLogin("Доступ закрыт или заявка ещё не подтверждена — обратитесь к сервисному администратору"); }
+  start(me);
+  try { await loadAll(); } catch (e) { if (!netErr(e)) toast("Ошибка загрузки: " + e.message, true); }
+  subscribe(); render(); flush(); loadPrice(); markSeen();
+  pushOn(false).then(render, () => {});
+}
+
+// ---------- демо-версия: панель и вход в один тап ----------
+function demoBar() {
+  const D = window.REMZONA_DEMO; if (!D) return "";
+  return `<div class="demo"><span class="grow"><b>Демо</b> · данные вымышленные</span>
+    <button data-act="demolive">Коллеги: ${D.live ? "вкл" : "выкл"}</button><button data-act="demoreset">Сбросить</button></div>`;
+}
+function demoLogin() {
+  const D = window.REMZONA_DEMO; if (!D) return "";
+  const acc = D.accounts().filter((a) => a.site === SITES[0]);
+  const row = (a) => `<button data-act="pick" data-login="${esc(a.login)}">${esc(a.name)}<small>${a.role === "admin" ? "администратор" : "механик"} ›</small></button>`;
+  return `<div class="demoacc"><div class="demo"><span class="grow"><b>Демо-версия.</b> Выберите учётную запись — PIN <b>${D.pin}</b>. Данные вымышленные.</span></div>
+    <h3>Администратор — лента, аналитика, люди</h3><div class="names">${acc.filter((a) => a.role === "admin").map(row).join("")}</div>
+    <h3>Механик — заезды с телефона</h3><div class="names">${acc.filter((a) => a.role !== "admin").map(row).join("")}</div></div>`;
+}
+
+// ---------- аналитика (администратор): заезды, время ремонта, простой не по нашей вине ----------
+// данные -- записи участка за 7 / 30 суток (отдельный запрос: в ленте только последние сутки×3)
+const ANA = { days: 30, rows: null, at: 0, err: "", sel: null };
+async function loadAna() {
+  const since = new Date(Date.now() - ANA.days * 86400000); since.setHours(0, 0, 0, 0);
+  const { data, error } = await sb.from("jobs").select("*").eq("deleted", false).eq("site", S.me.site).gte("started_at", since.toISOString())
+    .order("started_at").limit(3000);
+  ANA.err = error ? (netErr(error) ? "Нет связи — аналитика появится, когда будет интернет" : error.message) : "";
+  if (!error) { ANA.rows = data; ANA.at = since.getTime(); }
+  if (S.tab === "ana") render();
+}
+const hrs = (ms) => ms / 3600000;
+const f1 = (x) => (Math.round(x * 10) / 10).toLocaleString("ru-RU");
+function anaHtml() {
+  const per = `<div class="seg two" style="margin-top:10px">${[7, 30].map((d) => `<button class="${ANA.days === d ? "on" : ""}" data-act="anaper" data-v="${d}">${d} суток</button>`).join("")}</div>`;
+  if (!ANA.rows) return `${per}<div class="empty" style="margin-top:12px">${esc(ANA.err || "Загрузка…")}</div>`;
+  const now = Date.now(), mm = new Map(ANA.rows.map((j) => [j.id, j]));
+  for (const j of S.jobs.values()) if (new Date(j.started_at) >= ANA.at) mm.set(j.id, j);   // свежие изменения по Realtime
+  const js = [...mm.values()].filter((j) => !j.deleted);
+  if (!js.length) return `${per}<div class="empty" style="margin-top:12px">За период записей нет</div>`;
+  // время ремонта -- от заезда до готовности (или выезда); ожидание не по нашей вине -- от «готова» до выезда
+  const repair = (j) => new Date(j.ready_at || j.ended_at || now) - new Date(j.started_at);
+  const waitMs = (j) => j.ready_at ? Math.max(0, new Date(j.ended_at || now) - new Date(j.ready_at)) : 0;
+  const closed = js.filter((j) => j.ended_at);
+  const totalMs = js.reduce((a, j) => a + (new Date(j.ended_at || now) - new Date(j.started_at)), 0);
+  const waitAll = js.reduce((a, j) => a + waitMs(j), 0);
+  const cars = new Set(js.map((j) => j.gar)).size;
+  const rep = closed.filter((j) => j.kind === "Ремонт"), avgRep = rep.length ? hrs(rep.reduce((a, j) => a + repair(j), 0) / rep.length) : 0;
+  const kpi = (v, l) => `<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`;
+  let h = `${per}<h2>Итоги за ${ANA.days} суток · ${esc(S.me.site)}</h2><div class="kpis">
+    ${kpi(js.length, "заездов на ремзону")}${kpi(cars, "единиц техники обслужено")}
+    ${kpi(`${f1(avgRep)} <small>ч</small>`, "в среднем на ремонт")}
+    ${kpi(`${f1(hrs(waitAll))} <small>ч</small>`, `простой не по нашей вине · ${totalMs ? Math.round(waitAll / totalMs * 100) : 0}% времени`)}</div>`;
+
+  // заезды по суткам
+  const days = [], d0 = new Date(ANA.at);
+  for (let i = 0; i < ANA.days + 1; i++) { const d = new Date(d0); d.setDate(d.getDate() + i); if (d > now) break; days.push({ d, n: 0, rep: 0, other: 0 }); }
+  for (const j of js) { const k = Math.floor((new Date(j.started_at) - d0) / 86400000); const x = days[Math.min(Math.max(k, 0), days.length - 1)]; if (x) x.n++; }
+  const mx = Math.max(1, ...days.map((x) => x.n)), sel = ANA.sel != null ? days[ANA.sel] : null;
+  const avgDay = js.length / days.length;
+  h += `<h2>Заезды по суткам</h2><div class="chart"><div class="cap">${sel ? `${dayTitleTxt(sel.d)}: <b>${sel.n}</b> заездов` : `в среднем ${f1(avgDay)} в сутки, максимум ${mx} — нажмите на столбик`}</div>
+    <div class="cols" role="img" aria-label="Заезды по суткам">${days.map((x, i) => `<button class="${ANA.sel === i ? "on" : ""}" data-act="anabar" data-i="${i}" title="${dm(x.d)}: ${x.n}"><i style="height:${x.n / mx * 100}%"></i></button>`).join("")}</div>
+    <div class="axis"><span>${dm(days[0].d)}</span><span>${dm(days[days.length - 1].d)}</span></div></div>`;
+
+  // горизонтальные полосы: подпись, полоса, значение
+  const bars = (items, fmtV) => { const m = Math.max(...items.map((x) => x.v), 0.0001);
+    return items.map((x) => `<div class="hb"><span class="t" title="${esc(x.t + (x.m ? " · " + x.m : ""))}">${esc(x.t)}${x.m ? ` <small>${esc(x.m)}</small>` : ""}</span><span class="bar"><i style="width:${Math.max(2, x.v / m * 100)}%"></i></span><span class="val">${fmtV(x)}</span></div>`).join(""); };
+
+  const kinds = KINDS.map((k) => { const xs = closed.filter((j) => j.kind === k); return { t: k, n: xs.length, v: xs.length ? hrs(xs.reduce((a, j) => a + repair(j), 0) / xs.length) : 0 }; }).filter((x) => x.n);
+  h += `<h2>Среднее время работ по видам</h2><div class="chart">${bars(kinds, (x) => `${f1(x.v)} ч · ${x.n}`)}<div class="anote">часы от заезда до готовности; справа — число закрытых записей</div></div>`;
+
+  const reasons = new Map();
+  for (const j of js) if (j.ready_at) { const r = j.wait_reason || "Другое"; const o = reasons.get(r) || { t: r, v: 0, n: 0 }; o.v += hrs(waitMs(j)); o.n++; reasons.set(r, o); }
+  const rs = [...reasons.values()].sort((a, b) => b.v - a.v);
+  h += `<h2>Готова, но ждёт — не по нашей вине</h2><div class="chart">${rs.length ? bars(rs, (x) => `${f1(x.v)} ч · ${x.n}`) : `<div class="cap">За период ожиданий не отмечено</div>`}
+    <div class="anote">машина исправна, но не уходит с площадки: эти часы раньше записывались в простой ремзоны</div></div>`;
+
+  const byCar = new Map();
+  for (const j of js) { const o = byCar.get(j.gar) || { t: j.gar, v: 0, n: 0 }; o.v += hrs(repair(j)); o.n++; byCar.set(j.gar, o); }
+  const top = [...byCar.values()].sort((a, b) => b.v - a.v).slice(0, 6);
+  top.forEach((x) => { const m = S.machines.find((c) => c.gar === x.t); x.m = m?.model || ""; });
+  h += `<h2>Больше всего часов в ремонте</h2><div class="chart">${bars(top, (x) => `${f1(x.v)} ч · ${x.n} заезд.`)}<div class="anote">кандидаты на углублённую диагностику</div></div>`;
+
+  const night = js.filter((j) => shiftOf(new Date(j.started_at)).n === 1).length;
+  const xl = js.filter((j) => j.site === EXCEL_SITE), inXl = xl.filter((j) => j.imported_rev > 0 && j.imported_rev >= j.rev).length;
+  h += `<h2>Смены и Excel-книга</h2><div class="kpis">${kpi(night, "заездов ночью")}${kpi(js.length - night, "заездов днём")}
+    ${S.me.site === EXCEL_SITE ? kpi(`${inXl} <small>из ${xl.length}</small>`, "перенесено в Excel-книгу") : ""}${kpi(js.filter((j) => !j.ended_at).length, "сейчас на ремзоне")}</div>`;
+  return h;
+}
+const dayTitleTxt = (d) => `${dm(d)}, ${["вс", "пн", "вт", "ср", "чт", "пт", "сб"][d.getDay()]}`;
+
+// ---------- экраны ----------
+const newCount = () => allJobs().filter((j) => j.mechanic_id !== S.me?.id && !fromBook(j) && new Date(j.updated_at).getTime() > S.seen).length;
+function renderConn() {
+  const c = $("#conn"); if (!c) return;
+  const n = S.queue.length;
+  if (n) { c.className = "wait"; c.textContent = `не отправлено: ${n}`; }
+  else if (!navigator.onLine) { c.className = "off"; c.textContent = "нет связи"; }
+  else if (S.rt === "SUBSCRIBED") { c.className = "ok"; c.textContent = "на связи"; }
+  else { c.className = "off"; c.textContent = "подключение…"; }
+}
+function card(j, opts = {}) {
+  const m = S.machines.find((x) => x.gar === j.gar);
+  // opts.at -- конец прошлой смены: что было после него, в этой смене ещё не случилось
+  const at = opts.at, open = !j.ended_at || (at && new Date(j.ended_at) >= at);
+  const isNew = opts.feed && j.mechanic_id !== S.me.id && !fromBook(j) && new Date(j.updated_at).getTime() > S.seen;
+  const ready = !!j.ready_at && !(at && new Date(j.ready_at) >= at), why = esc((j.wait_reason || "").toLowerCase());
+  // справа -- время: на площадке / ждёт / сколько стояла; под видом работ -- статус и механик
+  const tm = open && ready ? `<span class="tm" title="Ждёт ${dur(j.ready_at, at)}">${clock(j.ready_at, at)}</span>`
+    : open ? `<span class="tm" title="На площадке ${dur(j.started_at, at)}">${clock(j.started_at, at)}</span>`
+    : `<span class="tm" title="Стояла ${dur(j.started_at, j.ended_at)}">${clock(j.started_at, j.ended_at)}</span>`;
+  const st = open && ready ? `Готова, ждёт${why ? ` — ${why}` : ""} · ремонт ${dur(j.started_at, j.ready_at)}`
+    : open ? `${areaOf(j) === "ТО" ? "На ТО" : "На площадке"} с ${when(j.started_at)}` : `Выехала ${when(j.ended_at)}`;
+  const txt = [j.fault && "⚠ " + j.fault, j.work && "✔ " + j.work].filter(Boolean).join("\n");
+  const crew = j.workers?.length ? esc(j.workers.join(", ")) : j.crew ? `${j.crew} чел.` : "", nPh = S.photos.get(j.id)?.length || 0;
+  const meta = [crew && `<span title="Кто работает">${svg(ICON.people)}${crew}</span>`, nPh && `<span title="Фото">${svg(ICON.cam)}${nPh}</span>`].filter(Boolean);
+  const b = [];
+  if (j.pending) b.push(`<span class="badge amber">ждёт отправки</span>`);
+  if (isAdmin() && !j.pending && j.site === EXCEL_SITE) b.push(j.rev > j.imported_rev ? `<span class="badge red">не в таблице</span>` : `<span class="badge green">в таблице</span>`);
+  if (isNew) b.push(`<span class="badge red">новое</span>`);
+  if (ready && !open) b.push(`<span class="badge amber">ожидание ${dur(j.ready_at, j.ended_at)}${why ? ` — ${why}` : ""}</span>`);
+  if (j.moto) b.push(`<span class="badge">м/ч ${esc(j.moto)}</span>`);
+  if (j.tmc) b.push(`<span class="badge">ТМЦ</span>`);
+  return `<div class="card ${open ? (ready ? "ready" : "open") : "closed"} ${isNew ? "new" : ""}" data-act="${opts.act || "job"}" data-id="${esc(j.id)}">
+    <div class="gar">${esc(j.gar)}<small>${esc(m?.model || "")}</small></div>
+    <div class="body"><div class="top"><span class="kind">${esc(j.kind)}</span>${tm}</div>
+    <div class="st">${st} · ${esc(j.mechanic_name || "—")}</div>
+    ${txt ? `<div class="txt">${esc(txt)}</div>` : ""}${meta.length ? `<div class="meta">${meta.join("")}</div>` : ""}
+    ${b.length ? `<div class="badges">${b.join("")}</div>` : ""}</div></div>`;
+}
+const list = (xs, opts, empty) => (xs.length ? `<div class="group">${xs.map((j) => card(j, opts)).join("")}</div>` : `<div class="empty">${empty}</div>`);
+const MONTHS = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+function dayTitle(d) {
+  const dt = `${d.getDate()} ${MONTHS[d.getMonth()]}`, y = new Date(); y.setDate(y.getDate() - 1);
+  const w = d.toDateString() === new Date().toDateString() ? "Сегодня" : d.toDateString() === y.toDateString() ? "Вчера" : "";
+  return `<div class="fdate">${w ? `${w} <small>${dt}</small>` : dt}</div>`;
+}
+// лента (04.11.2026, решение пользователя по макету): дата, внутри смены; ночь -- к дате окончания, как в таблицах; порядок прежний -- по последнему изменению
+function feedHtml(xs) {
+  if (!xs.length) return `<div class="empty">Пока пусто</div>`;
+  const gs = new Map();
+  for (const j of xs) {
+    const sh = shiftOf(new Date(j.updated_at || j.started_at || Date.now())), k = shKey(sh);
+    if (!gs.has(k)) gs.set(k, { sh, js: [] });
+    gs.get(k).js.push(j);
+  }
+  let last = "";
+  return [...gs.values()].map(({ sh, js }) => {
+    const d = sh.date.toDateString(), top = d === last ? "" : dayTitle(sh.date); last = d;
+    return `${top}<div class="fshift">${sh.n === 1 ? "Ночь" : "День"} · ${js.length}</div>${list(js, { feed: true }, "")}`;
+  }).join("");
+}
+function installHint() {
+  if (load("rz_hint_off", false) || matchMedia("(display-mode: standalone)").matches || navigator.standalone) return "";
+  const ios = /iphone|ipad/i.test(navigator.userAgent);
+  return `<div class="hint"><span class="grow">📲 Добавьте приложение на экран телефона: ${ios ? "кнопка «Поделиться» → «На экран „Домой“»" :
+    "меню браузера ⋮ → «Добавить на главный экран»"}.${ios && isAdmin() ? " Уведомления о заездах на iPhone приходят только в установленное приложение." : ""}</span>${deferredInstall ? `<button class="btn small dark" data-act="install">Установить</button>` : ""}
+    <button class="btn small" data-act="hintoff">✕</button></div>`;
+}
+function render() {
+  if (!S.me) return;
+  const js = allJobs(), sh = myShift();
+  const openJ = js.filter((j) => !j.ended_at).sort((a, b) => new Date(a.started_at) - new Date(b.started_at));
+  const sw = [1, 2].map((n) => `<button class="${sh.n === n ? "on" : ""}" data-act="shift" data-v="${n}">${n === 1 ? "Ночь" : "День"}</button>`).join("");
+  const head = `<div class="shift"><span><button class="sdate" data-act="pastpick">${dm(sh.date)} · смена ${sh.n}</button> <span class="sw">${sw}</span> <small>${hm(new Date())}</small></span><button class="site" data-act="site">${esc(S.me.site || EXCEL_SITE)}</button></div>`;
+  // площадка / ТО / долгострои: переключатель над списком, редактирование -- та же карточка записи
+  // ТО дольше суток остаётся на вкладке ТО; долгострои -- только записи площадки
+  const isLong = (j) => Date.now() - new Date(j.started_at) >= LONG_MS;
+  const pad = openJ.filter((j) => areaOf(j) === "Площадка");
+  const yard = pad.filter((j) => !isLong(j)), longJ = pad.filter(isLong), toJ = openJ.filter((j) => areaOf(j) === "ТО");
+  const views = `<div class="seg three views">${[["yard", "Площадка", yard.length], ["to", "ТО", toJ.length], ["long", "Долгострои", longJ.length]].map(([k, t, n]) =>
+    `<button class="${S.view === k ? "on" : ""}" data-act="view" data-v="${k}">${t} · ${n}</button>`).join("")}</div>`;
+  const yardH = S.view === "long" ? `<h2>Стоят больше суток <span class="n">${longJ.length}</span></h2>${list(longJ, {}, "Долгостроев нет")}`
+    : S.view === "to" ? `<h2>На ТО <span class="n">${toJ.length}</span></h2>${list(toJ, {}, "Сейчас на ТО никого")}`
+    : `<h2>На площадке <span class="n">${yard.length}</span></h2>${list(yard, {}, "Сейчас на площадке никого")}`;
+  // выезды смены -- все по участку (ремонт могли начать и закрыть разные механики), только машины открытой вкладки
+  const area = S.view === "to" ? "ТО" : "Площадка";
+  const outs = js.filter((j) => j.ended_at && new Date(j.ended_at) >= sh.start && areaOf(j) === area)
+    .sort((a, b) => new Date(b.ended_at) - new Date(a.ended_at));
+  const outH = S.view === "long" ? "" : `<h2>Выезды за смену <span class="n">${outs.length}</span><button class="btn small" style="margin-left:auto;text-transform:none;letter-spacing:0" data-act="chatmsg" data-area="${area}">Сообщение в чат</button></h2>${list(outs, {}, "Пока нет")}`;
+  let h = "";
+  $("#nav").hidden = !isAdmin();
+  if (!isAdmin()) {
+    h = S.past ? pastHtml() : `${head}<div class="dock"><button class="fab" data-act="new">${svg(ICON.plus)}Заезд машины</button></div>${installHint()}
+      ${views}${yardH}${outH}${TRASH}`;
+  } else {
+    const nc = newCount();
+    const nav = [["feed", "Лента", ICON.feed, nc, ""], ["open", "Площадка", ICON.wrench, openJ.length, "dim"], ["staff", "Люди", ICON.people, S.staff.filter((s) => s.pending && s.site === S.me.site).length, ""], ["cars", "Машины", ICON.truck, 0, ""], ["ana", "Аналитика", ICON.chart, 0, ""]];
+    $("#nav").innerHTML = nav.map(([k, t, ic, n, c]) => `<button class="${S.tab === k ? "on" : ""}" data-act="tab" data-tab="${k}">${svg(ic)}${t}${n ? `<span class="n ${c}">${n}</span>` : ""}</button>`).join("");
+    if (S.past && (S.tab === "feed" || S.tab === "open")) {
+      h += pastHtml();
+    } else if (S.tab === "feed") {
+      const feed =[...js].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+      const notIn = js.filter((j) => j.site === EXCEL_SITE && j.rev > j.imported_rev).length;
+      h += `${head}
+        <div class="row" style="margin-top:10px"><button class="btn red" data-act="new">＋ Заезд</button>
+        <button class="btn" data-act="chatmsg" data-area="Площадка">В чат: Площадка</button>
+        <button class="btn" data-act="chatmsg" data-area="ТО">В чат: ТО</button>
+        ${nc ? `<button class="btn" data-act="seen">Просмотрено (${nc})</button>` : ""}
+        ${"Notification" in window && (pushOk() ? !S.push && Notification.permission !== "denied" : Notification.permission === "default")
+          ? `<button class="btn" data-act="notif">🔔 Уведомления</button>` : ""}
+        ${S.me.site === EXCEL_SITE ? `<span style="margin-left:auto;font-size:13px;color:var(--muted)">не в таблице: ${notIn}</span>` : ""}</div>
+        ${(() => { const on = S.staff.filter((s) => s.id !== S.me.id && S.online.has(s.id));
+          return on.length ? `<div class="online"><span class="dot"></span>В приложении: ${on.map((s) => esc(s.name)).join(", ")}</div>` : ""; })()}
+        ${installHint()}<h2>Последние события</h2>${feedHtml(feed)}${TRASH}`;
+    } else if (S.tab === "open") {
+      h += `${head}${views}${yardH}${outH}${TRASH}`;
+    } else if (S.tab === "staff") {
+      // владелец правит всех в отдельной карточке; другие администраторы -- PIN и отключение механиков (и свой PIN)
+      // участок: администратор видит людей своего участка, владелец -- ещё и другого (отдельным списком)
+      const own = !!S.me.owner, mine = (s) => s.id === S.me.id || s.role === "mechanic";
+      const here = (s) => (s.site || EXCEL_SITE) === S.me.site, others = S.staff.filter((s) => !s.pending && !here(s));
+      const reqs = S.staff.filter((s) => s.pending && here(s));
+      const row = (s) => `<div class="${s.active ? "" : "off"}">
+          <span class="grow"><b>${esc(s.name)}</b><br><small style="color:var(--muted)">${s.role === "admin" ? "администратор" : "механик"}${s.owner ? " · владелец" : ""}${here(s) ? "" : " · " + esc(s.site)}${s.active ? ` · ${seenTxt(s)}` : " · отключён"}</small></span>
+          ${own ? `<button class="btn small" data-act="staff" data-id="${s.id}">Изменить</button>` : `
+          ${mine(s) ? `<button class="btn small" data-act="pin" data-id="${s.id}">PIN</button>` : ""}
+          ${s.id !== S.me.id && mine(s) ? `<button class="btn small" data-act="active" data-id="${s.id}" data-on="${s.active ? 0 : 1}">${s.active ? "Отключить" : "Включить"}</button>` : ""}`}</div>`;
+      h += `<div class="hint"><span class="grow">${S.invite
+          ? `Приглашение · код <b style="letter-spacing:.12em">${esc(S.invite)}</b><br><small style="color:var(--muted)">По ссылке сотрудник зарегистрируется сам · <button class="link" data-act="newcode" style="font-size:inherit;padding:0;margin:0">новый код</button></small>`
+          : `Ссылка-приглашение — каждый сотрудник зарегистрируется сам`}</span>
+          <button class="btn small dark" data-act="invite">${S.invite ? "Поделиться" : "Создать"}</button></div>
+        ${reqs.length ? `<h2>Заявки <span class="n red">${reqs.length}</span></h2><div class="list">${reqs.map((s) => `<div>
+          <span class="grow"><b>${esc(s.name)}</b><br><small style="color:var(--muted)">механик · ждёт подтверждения</small></span>
+          <button class="btn small red" data-act="approve" data-id="${s.id}">Принять</button>
+          <button class="btn small" data-act="reject" data-id="${s.id}">Отклонить</button></div>`).join("")}</div>` : ""}
+        <h2>Сотрудники · ${esc(S.me.site)}</h2><div class="list">${S.staff.filter((s) => !s.pending && here(s)).map(row).join("") || `<div>Нет сотрудников</div>`}</div>
+        ${own && others.length ? `<h2>Другой участок</h2><div class="list">${others.map(row).join("")}</div>` : ""}
+        <h2>Добавить сотрудника</h2>
+        <label class="f">Фамилия И.О. — как в таблицах</label><input class="inp" id="nsName" placeholder="Метелкин А.В.">
+        <label class="f">Роль</label><div class="chips" id="nsRole"><button class="chip ${S.nsRole !== "admin" ? "on" : ""}" data-act="role" data-v="mechanic">Механик</button>${own ? `<button class="chip ${S.nsRole === "admin" ? "on" : ""}" data-act="role" data-v="admin">Администратор</button>` : ""}</div>
+        <label class="f">PIN — 4 цифры (сообщите сотруднику)</label><div class="timebox"><input class="inp" id="nsPin" inputmode="numeric" maxlength="4"><button class="btn" data-act="genpin">Случайный</button></div>
+        <div class="actions"><button class="btn red" data-act="addstaff">Добавить</button></div>
+        <h2>Исполнители работ <span class="n">${S.workers.filter((w) => w.active).length}</span></h2>
+        <div style="font-size:13px;color:var(--muted)">Слесари, сварщики и др. — механики отмечают их в записи (для тех. отчёта). Входить в приложение им не нужно. Список общий для участков.</div>
+        <input class="inp" id="nwQ" style="margin-top:8px" placeholder="Найти: фамилия (пусто — скрытые)" autocomplete="off"><div class="list" id="wkAdm" style="margin-top:8px"></div>
+        <label class="f">Добавить исполнителя — Фамилия И.О.</label>
+        <div class="timebox"><input class="inp" id="nwName" placeholder="Иванов И.И."><select class="inp" id="nwGrp" style="flex:0 0 120px">${["слесарь", "сварщик", "механик", "инженер"].map((g) => `<option>${g}</option>`).join("")}</select></div>
+        <div class="actions"><button class="btn red" data-act="wkadd">Добавить</button></div>`;
+    } else if (S.tab === "ana") {
+      h += anaHtml();
+    } else if (S.tab === "cars") {
+      const act = S.machines.filter((m) => m.active), off = S.machines.filter((m) => !m.active);
+      const grid = (xs) => `<div class="gars">${xs.map((m) => `<button data-act="car" data-gar="${esc(m.gar)}" title="${esc(m.model)}">${esc(m.gar)}</button>`).join("")}</div>`;
+      h += `<h2>На участке <span class="n">${act.length}</span></h2><div style="font-size:13px;color:var(--muted)">Нажмите на номер, чтобы убрать с участка (в списке выбора у механиков его не будет).</div>${grid(act)}
+        <h2>Не на участке <span class="n">${off.length}</span></h2>${grid(off)}
+        <h2>Добавить машину</h2><div class="timebox"><input class="inp" id="ncGar" inputmode="numeric" placeholder="Гар. №">
+        <select class="inp" id="ncModel"><option>Самосвал 90 т</option><option>Самосвал 130 т</option><option>Самосвал 220 т</option><option>Экскаватор 12 м³</option><option>Бульдозер</option></select><button class="btn red" data-act="addcar">Добавить</button></div>`;
+    }
+  }
+  // перерисовка не стирает вписанное администратором («Люди», «Машины»): значения полей -- на место
+  const keep = [...$("#app").querySelectorAll("input[id], select[id]")].map((el) => [el.id, el.value]);
+  $("#app").innerHTML = demoBar() + h + CREDIT;
+  keep.forEach(([id, v]) => { const el = document.getElementById(id); if (el?.closest("#app")) el.value = v; });
+  if ($("#nwQ")) { $("#nwQ").addEventListener("input", drawWkAdmin); drawWkAdmin(); }
+  renderConn(); hideSplash();
+}
+// ---------- недавно удалённые (03.11.2026, просьба пользователя: удалили заезд по ошибке -- вернуть): сервер хранит 30 суток ----------
+// вернуть может тот же, кто может удалить: администратор любую, механик свою (на сервере -- jobs_before); в книгу запись уходит снова
+const TRASH_DAYS = 30, TRASH = `<div style="text-align:center;margin-top:16px"><button class="link" data-act="trash">Недавно удалённые</button></div>`;
+const canTrash = (j) => isAdmin() || j.mechanic_id === S.me.id;
+async function openTrash() {
+  if (!navigator.onLine) return toast("Нет связи — список не загрузить", true);
+  const since = new Date(Date.now() - TRASH_DAYS * 86400000).toISOString();
+  const { data, error } = await sb.from("jobs").select("*").eq("deleted", true).eq("site", S.me.site).gte("deleted_at", since).order("deleted_at", { ascending: false }).limit(100);
+  if (error) return toast(netErr(error) ? "Нет связи — список не загрузить" : error.message, true);
+  S.trash = data;
+  $("#panel").innerHTML = `<div class="head"><span></span><b>Недавно удалённые<small>хранятся ${TRASH_DAYS} суток</small></b><button class="nb r" data-act="close">Закрыть</button></div>
+    ${data.length ? `<div class="list" style="margin-top:12px">${data.map((j) => `<div><span class="grow"><b>${esc(j.gar)}</b> · ${esc(j.kind)} · ${j.ended_at ? `${fmt(j.started_at)} – ${fmt(j.ended_at)}` : `заезд ${fmt(j.started_at)}`}
+        <br><small style="color:var(--muted)">${esc(j.fault || j.work || "без описания")}<br>Удалена ${when(j.deleted_at)}${j.deleted_by ? ` · ${esc(j.deleted_by)}` : ""}</small></span>
+        ${canTrash(j) ? `<button class="btn small dark" data-act="restore" data-id="${esc(j.id)}">Вернуть</button>` : `<small style="color:var(--muted)">вернёт автор или администратор</small>`}</div>`).join("")}</div>`
+      : `<div class="empty" style="margin-top:12px">Удалённых записей нет</div>`}`;
+  $("#sheet").hidden = false;
+}
+function restoreJob(id) {
+  const j = S.trash?.find((x) => x.id === id); if (!j) return;
+  const dup = !j.ended_at && allJobs().find((x) => !x.ended_at && x.gar === j.gar);
+  if (dup && !confirm(`Машина ${j.gar} сейчас на площадке (заезд ${fmt(dup.started_at)}). Всё равно вернуть запись?`)) return;
+  enqueue(j.client_id || null, { deleted: false }, false, j.id);
+  S.trash = null; closeSheet(); toast(`${j.gar}: запись возвращена`);
+}
+// ---------- просмотр прошлой смены (решение пользователя): только просмотр, грузится с сервера, S.past не сохраняется ----------
+function openPastPick() {
+  const now = Date.now(), cur = shiftOf(), on = S.past?.start ?? myShift().start.getTime(), DAYS = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
+  const rows = Array.from({ length: 30 }, (_, i) => {
+    const d = new Date(cur.date); d.setDate(d.getDate() - i);
+    const night = new Date(d); night.setDate(night.getDate() - 1); night.setHours(NIGHT_START, 0, 0, 0);
+    const day = new Date(d); day.setHours(DAY_START, 0, 0, 0);
+    const b = (st, t) => `<button class="chip ${st.getTime() === on ? "on" : ""}" data-act="pastgo" data-st="${st.getTime()}" ${st.getTime() > now ? "disabled" : ""}>${t}</button>`;
+    return `<div class="pastday"><b>${dm(d)}</b><small>${DAYS[d.getDay()]}</small>${b(night, "Ночь")}${b(day, "День")}</div>`;
+  }).join("");
+  $("#panel").innerHTML = `<div class="head"><span></span><b>Прошлые смены<small id="pastSub"></small></b><button class="nb r" data-act="close">Закрыть</button></div>
+    <div class="pastq"><input class="inp" id="pastQ" inputmode="numeric" placeholder="Номер машины" autocomplete="off" value="${esc(S.found?.gar || "")}"></div>
+    <div id="pastFound"></div><div id="pastDays">${rows}</div>`;
+  $("#sheet").hidden = false;
+  $("#pastQ").addEventListener("input", (e) => { e.target.value = e.target.value.replace(/\D/g, ""); findGar(e.target.value); });
+  drawFound();
+}
+// поиск в истории по машине (04.11.2026, решение пользователя по макету): все записи машины на сервере, новые сверху; карточка только для просмотра
+function findGar(q) {
+  clearTimeout(S.foundT);
+  if (q.length < 3) { S.found = null; return drawFound(); }
+  S.foundT = setTimeout(async () => {
+    if (!navigator.onLine) { S.found = { gar: q, jobs: [], err: "Нет связи — историю не загрузить" }; return drawFound(); }
+    const { data, error } = await sb.from("jobs").select("*").eq("deleted", false).eq("site", S.me.site).eq("gar", q).order("started_at", { ascending: false }).limit(100);
+    if ($("#pastQ")?.value !== q) return;   // пока ждали ответ, номер изменили или окно закрыли
+    S.found = error ? { gar: q, jobs: [], err: netErr(error) ? "Нет связи — историю не загрузить" : error.message } : { gar: q, jobs: data };
+    drawFound();
+  }, 300);
+}
+function drawFound() {
+  const box = $("#pastFound"), f = S.found; if (!box) return;
+  $("#pastDays").hidden = !!f;
+  if (!f) { $("#pastSub").textContent = "за 30 суток, только просмотр"; box.innerHTML = ""; return; }
+  const n = f.jobs.length, w = n % 10 === 1 && n % 100 !== 11 ? "запись" : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? "записи" : "записей";
+  $("#pastSub").textContent = f.err ? `машина ${f.gar}` : `машина ${f.gar}: ${n} ${w}`;
+  if (f.err || !n) { box.innerHTML = `<div class="empty">${esc(f.err || `Записей по машине ${f.gar} нет`)}</div>`; return; }
+  const days = new Map();
+  for (const j of f.jobs) { const d = new Date(j.started_at), k = d.toDateString(); if (!days.has(k)) days.set(k, { d, js: [] }); days.get(k).js.push(j); }
+  box.innerHTML = [...days.values()].map(({ d, js }) => `${dayTitle(d)}${list(js, { act: "foundjob" }, "")}`).join("");
+}
+// запись глазами прошлой смены: работы с d другой смены не показываем; работы без d (внесены до 03.11.2026) -- во всех сменах
+function pastJob(j, key) {
+  if (!Array.isArray(j.steps) || !j.steps.some((w) => w.d)) return j;
+  const steps = j.steps.filter((w) => !w.d || w.d === key), workers = [...new Set(steps.flatMap((w) => w.who || []))];
+  return { ...j, steps, workers, work: steps.map((w) => w.t).filter(Boolean).join("\n"), crew: workers.length ? j.crew : null };
+}
+async function openPast(start) {
+  if (start === shiftOf().start.getTime()) { S.past = null; closeSheet(); render(); return scrollTo(0, 0); }   // идущая смена -- обычный экран
+  if (!navigator.onLine) return toast("Нет связи — прошлую смену не загрузить", true);
+  const sh = shiftOf(new Date(start + 60000)), en = start + SHIFT_LEN;
+  toast("Загрузка смены…");
+  const { data, error } = await sb.from("jobs").select("*").eq("deleted", false).eq("site", S.me.site).lt("started_at", new Date(en).toISOString())
+    .or(`ended_at.is.null,ended_at.gte.${new Date(start).toISOString()}`).order("started_at").limit(500);
+  if (error) return toast(netErr(error) ? "Нет связи — прошлую смену не загрузить" : error.message, true);
+  S.past = { sh, start, en, area: S.past?.area || (S.view === "to" ? "ТО" : "Площадка"), jobs: data.map((j) => pastJob(j, shKey(sh))) };
+  closeSheet(); render(); scrollTo(0, 0);
+}
+function pastHtml() {
+  const { sh, en, area, jobs } = S.past, T = (x) => new Date(x).getTime(), n = (a) => jobs.filter((j) => areaOf(j) === a).length;
+  const js = jobs.filter((j) => areaOf(j) === area), at = en;
+  const stayed = js.filter((j) => !j.ended_at || T(j.ended_at) >= en);
+  const outs = js.filter((j) => j.ended_at && T(j.ended_at) < en).sort((a, b) => T(b.ended_at) - T(a.ended_at));
+  return `<div class="shift"><span><button class="sdate" data-act="pastpick">Просмотр: ${dm(sh.date)} · смена ${sh.n}</button></span><button class="btn small" data-act="pastback">К текущей смене</button></div>
+    <div class="seg two views">${["Площадка", "ТО"].map((a) => `<button class="${a === area ? "on" : ""}" data-act="pastarea" data-v="${a}">${a} · ${n(a)}</button>`).join("")}</div>
+    <h2>Оставались ${area === "ТО" ? "на ТО" : "на площадке"} <span class="n">${stayed.length}</span></h2>${list(stayed, { at }, "Никого")}
+    <h2>Выезды за смену <span class="n">${outs.length}</span><button class="btn small" style="margin-left:auto;text-transform:none;letter-spacing:0" data-act="chatmsg" data-area="${area}">Сообщение в чат</button></h2>${list(outs, { at }, "Не было")}`;
+}
+// фоновая перерисовка (раз в минуту, события с сервера): пока вписывают в поле на экране -- не трогать (клавиатура не закроется),
+// перерисуется в следующий раз
+function renderSoft() {
+  const a = document.activeElement;
+  if (a?.closest?.("#app") && a.matches("input, select, textarea")) return;
+  render();
+}
+// «Люди» → исполнители: поиск (и скрытые), скрыть уволенного / вернуть -- в выборе у механиков скрытых нет
+function drawWkAdmin() {
+  const q = norm($("#nwQ").value.trim());
+  const xs = q.length >= 2 ? S.workers.filter((w) => norm(w.name).includes(q)).slice(0, 30) : S.workers.filter((w) => !w.active);
+  $("#wkAdm").innerHTML = xs.map((w) => `<div class="${w.active ? "" : "off"}"><span class="grow"><b>${esc(w.name)}</b><br><small style="color:var(--muted)">${esc(w.grp)}${w.active ? "" : " · скрыт"}</small></span>
+    <button class="btn small" data-act="wkact" data-id="${w.id}">${w.active ? "Скрыть" : "Вернуть"}</button></div>`).join("")
+    || `<div><small style="color:var(--muted)">${q.length >= 2 ? "Не найдено" : "Скрытых нет"}</small></div>`;
+}
+
+// ---------- карточка заезда ----------
+function openJob(id, found) {   // found -- записи поиска в истории: только просмотр, «Назад» к результатам
+  const j = id ? (found || (S.past ? S.past.jobs : allJobs())).find((x) => x.id === id) : null;
+  // ремонт идёт несколько смен: дополнить и закрыть может любой сотрудник участка (как на сервере, jobs_update); прошлая смена -- только просмотр
+  const can = !found && !S.past && (!j || j.site === S.me.site || j.mechanic_id === S.me.id);
+  // rev -- версия записи на сервере при открытии: при сохранении проверить, не изменил ли её кто-то другой
+  // новая запись -- на вкладку, откуда создана (у администратора заезд из «Ленты» -- Площадка); на ТО вид по умолчанию «ТО», можно сменить
+  const area = j ? areaOf(j) : !isAdmin() && S.view === "to" ? "ТО" : "Площадка";
+  S.edit = { j, can, ro: !!found, gar: j?.gar || "", area, kind: j?.kind || (area === "ТО" ? "ТО" : "Ремонт"), steps: stepsOf(j), insp: { ...(j?.inspect || {}) }, rev: j && S.jobs.get(j.id)?.rev };
+  const dis = can ? "" : "disabled";
+  // при заезде нужны только номер, вид, время и неисправность -- остальное свёрнуто
+  const more = `<div class="sec"><h3>Выполнены работы</h3><span class="rows" id="stRows"></span></div><div id="steps"></div>
+    ${can ? `<button class="addw" data-act="stadd">＋ Ещё работа</button>` : ""}<div id="stWarn"></div>
+    <label class="f">Моточасы</label><input class="inp" id="fMoto" inputmode="decimal" value="${esc(j?.moto ?? "")}" ${dis}>
+    <label class="f">Запчасти / ТМЦ</label><textarea class="inp" id="fTmc" style="min-height:52px" ${dis}>${esc(j?.tmc)}</textarea>
+    ${can ? `<div class="tmcq"><input class="inp" id="fTmcQ" placeholder="Найти в прайсе: артикул или слова" autocomplete="off">
+      <input class="inp" id="fTmcN" inputmode="numeric" value="1" aria-label="Количество, шт"></div><div id="tmcList"></div>` : ""}
+    <label class="f">Примечание</label><input class="inp" id="fNote" value="${esc(j?.note)}" ${dis}>
+    <div id="inspBox"></div>`;
+  // ремонт закончен, машина ждёт не по нашей вине -- время готовности и причина (в таблицу -- примечанием)
+  const wr = j?.wait_reason || "", other = !!wr && !WAITS.includes(wr);
+  S.edit.wait = other ? "Другое" : wr;
+  const readySec = j ? `<label class="f">Готова к выезду — ждёт не по нашей вине</label>
+    <div class="chips" id="fWait">${[...WAITS, "Другое"].map((w) => `<button class="chip ${w === S.edit.wait ? "on" : ""}" data-act="wait" data-v="${w}" ${dis}>${w}</button>`).join("")}</div>
+    <input class="inp" id="fWaitOther" style="margin-top:8px" placeholder="Чего ждёт машина" value="${other ? esc(wr) : ""}" ${dis} ${S.edit.wait === "Другое" ? "" : "hidden"}>
+    <div class="timebox" style="margin-top:8px"><input type="hidden" id="fReady" value="${toInput(j.ready_at)}">${tBtn("fReady", "Готова с", dis)}
+      <button class="btn" data-act="unready" ${dis}>Не ждёт</button></div>` : "";
+  $("#panel").innerHTML = `<div class="head"><button class="nb" data-act="${found ? "foundback" : "close"}">${can ? "Отмена" : found ? "Назад" : "Закрыть"}</button>
+      <b>${j ? "Машина " + esc(j.gar) : "Заезд машины"}${j ? `<small>${esc(j.mechanic_name || "")}</small>` : ""}</b>
+      ${j && can ? `<button class="nb r" data-act="savejob">Сохранить</button>` : "<span></span>"}</div>
+    ${can ? "" : `<div class="warn">${found ? "Из истории" : S.past ? "Прошлая смена" : "Запись другого участка"} — только просмотр.</div>`}
+    ${!j ? "" : j.id.startsWith("q:") ? `<div class="pnote">📷 Фото — когда запись отправится на сервер</div>`
+      : `<label class="f">Фото</label><div class="photos" id="fPhotos"></div>`}
+    <label class="f">Гаражный номер</label>
+    <input class="inp" id="fGar" inputmode="numeric" placeholder="Начните вводить номер" value="${esc(S.edit.gar)}" ${dis} autocomplete="off">
+    <div class="gars" id="garGrid"></div><div id="garWarn"></div>
+    <label class="f">Вкладка</label>
+    <div class="chips" id="fArea">${["Площадка", "ТО"].map((k) => `<button class="chip ${k === S.edit.area ? "on" : ""}" data-act="area" data-v="${k}" ${dis}>${k}</button>`).join("")}</div>
+    <label class="f">Вид работ</label>
+    <div class="chips" id="fKind">${KINDS.map((k) => `<button class="chip ${k === S.edit.kind ? "on" : ""}" data-act="kind" data-v="${k}" ${dis}>${k}</button>`).join("")}</div>
+    <div class="chips" id="toChips" style="margin-top:6px"></div>
+    <label class="f">Время заезда</label>
+    <div class="timebox"><input type="hidden" id="fStart" value="${toInput(j?.started_at || new Date().toISOString())}">${tBtn("fStart", "Время заезда", dis)}
+      <button class="btn" data-act="now" data-for="fStart" ${dis}>Сейчас</button></div>
+    <label class="f">Неисправность / что выявлено</label><textarea class="inp" id="fFault" ${dis}>${esc(j?.fault)}</textarea>
+    ${j ? "" : `<div class="pnote">📷 Фото можно добавить сразу после «Отметить заезд» — откройте запись</div>`}
+    ${j ? more : `<details class="more" id="more"><summary>Дополнительно <small>работы, м/ч, ТМЦ</small></summary>${more}</details>`}
+    ${readySec}
+    ${j ? `<label class="f">Время выезда</label>
+      <div class="timebox"><input type="hidden" id="fEnd" value="${toInput(j.ended_at)}">${tBtn("fEnd", "Время выезда", dis)}
+      <button class="btn" data-act="now" data-for="fEnd" ${dis}>Сейчас</button></div>` : ""}
+    ${j && !found && !S.past && (isAdmin() || j.mechanic_id === S.me.id) ? `<button class="delrow" data-act="deljob">Удалить запись</button>` : ""}
+    ${can ? `<div class="actions bar">${j ? `<button class="btn ${j.ended_at ? "red" : ""}" data-act="savejob">Сохранить</button>${!j.ended_at ? `<button class="btn red" data-act="exit">Выехала сейчас</button>` : ""}`
+      : `<button class="btn red" data-act="savejob">Отметить заезд</button>`}</div>` : ""}`;
+  $("#sheet").hidden = false;
+  ["fStart", "fReady", "fEnd"].forEach(tShow);
+  drawGars(); drawTo(); drawSteps(); drawInsp();
+  $("#inspBox").addEventListener("input", (ev) => { if (ev.target.dataset.pin) S.edit.insp[ev.target.dataset.pin] = ev.target.value; });
+  $("#fGar").addEventListener("input", (e) => { S.edit.gar = e.target.value.replace(/\D/g, ""); e.target.value = S.edit.gar; drawGars(); });
+  $("#fTmcQ")?.addEventListener("input", drawTmc);
+  const ta = $("#fTmc"); fitTa(ta); ta.addEventListener("input", () => fitTa(ta));   // поле ТМЦ растёт по строкам
+  $("#steps").addEventListener("input", (ev) => {   // поля работ: описание, время, поиск работы / исполнителя
+    const el = ev.target, f = el.dataset.sf, i = +el.closest(".work")?.dataset.i; if (!f) return;
+    if (f === "q") return drawStSug(i);
+    if (f === "wq") return drawStWho(i);
+    S.edit.steps[i][f] = el.value;
+    if (f === "t") fitTa(el); else drawStTot(i);
+  });
+  drawPhotos();
+  if (!j) setTimeout(() => $("#fGar").focus(), 50);
+}
+function fitTa(ta) { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + 2 + "px"; }   // +2 — рамка (border-box)
+function drawGars() {
+  const e = S.edit, q = e.gar, busy = new Set(allJobs().filter((x) => !x.ended_at && x.id !== e.j?.id).map((x) => x.gar));
+  const xs = S.machines.filter((m) => (m.active || m.gar === q) && (!q || m.gar.startsWith(q)));
+  $("#garGrid").innerHTML = e.can && !(xs.length === 1 && xs[0].gar === q) ?
+    xs.slice(0, 60).map((m) => `<button class="${busy.has(m.gar) ? "busy" : ""} ${m.gar === q ? "on" : ""}" data-act="gar" data-gar="${m.gar}">${m.gar}</button>`).join("") : "";
+  const o = busy.has(q) && allJobs().find((x) => !x.ended_at && x.gar === q && x.id !== e.j?.id);
+  $("#garWarn").innerHTML = o ? `<div class="warn">Машина ${esc(q)} уже на площадке: заезд ${fmt(o.started_at)} (${esc(o.mechanic_name || "—")}). Лучше дополнить ту запись.</div>`
+    : q && !xs.length ? `<div class="warn">Номера ${esc(q)} нет в списке машин участка.</div>` : "";   // пока номер набирается и есть подходящие -- без предупреждения
+}
+function drawTo() {
+  $("#toChips").innerHTML = S.edit.kind === "ТО" && S.edit.can ?
+    [0, 1, 2, 3, 4, 5, 6].map((n) => `<button class="chip" data-act="to" data-v="ТО-${n}">ТО-${n}</button>`).join("") : "";
+}
+// ---------- осмотр на ТО (03.11.2026, решение пользователя, этап 1 отметок): jobs.inspect, в сообщение ТО; в книгу не идёт, rev не меняет ----------
+// на Площадке блока нет, отметки записи сохраняются (вернётся на ТО -- на месте)
+const INSP = [["ac", "Кондиционер", "исправен", "неисправен"], ["pzd", "ПЖД", "исправно", "неисправно"], ["ansul", "ANSUL", "исправен", "неисправен"],
+  ["heat", "Теплообменник", "исправен", "неисправен"], ["uspvl", "УСПВЛ", "исправно", "неисправно"]];
+const PINS = [["lv", "ЛВ"], ["ln", "ЛН"], ["pv", "ПВ"], ["pn", "ПН"]];
+function drawInsp() {
+  const e = S.edit, box = $("#inspBox"); if (!box) return;
+  if (e.area !== "ТО") { box.innerHTML = ""; return; }
+  const dis = e.can ? "" : "disabled";
+  box.innerHTML = `<div class="sec"><h3>Осмотр на ТО</h3></div>${INSP.map(([k, t]) => {
+    const opts = [["ok", "Исправен"], ["bad", "Неисправен"], ...(k === "uspvl" ? [["no", "Нет"]] : [])];
+    return `<div class="insp"><span>${t}</span><div class="seg" style="grid-template-columns:repeat(${opts.length},auto)">${opts.map(([v, l]) =>
+      `<button class="${e.insp[k] === v ? "on" : ""}" data-act="insp" data-k="${k}" data-v="${v}" ${dis}>${l}</button>`).join("")}</div></div>`;
+  }).join("")}<label class="f">Замер шкворней</label><div class="pins">${PINS.map(([k, t]) =>
+    `<label><small>${t}</small><input class="inp" inputmode="decimal" data-pin="${k}" aria-label="Шкворень ${t}" value="${esc(e.insp[k] ?? "")}" ${dis}></label>`).join("")}</div>`;
+}
+// строки сообщения ТО: только отмеченное
+function inspLines(j) {
+  const o = j.inspect || {}, pins = PINS.filter(([k]) => o[k]).map(([k, t]) => `${t} ${o[k]}`);
+  return [...INSP.filter(([k]) => o[k]).map(([k, t, ok, bad]) => `${t} ${o[k] === "ok" ? ok : o[k] === "bad" ? bad : "нет"}`), ...(pins.length ? [`Замер шкворней ${pins.join(" ")}`] : [])];
+}
+// ---------- выполненные работы (31.10.2026, решение пользователя): как таблица «Выполнены работы» тех. отчёта ----------
+// работа = описание + начало/окончание (ЧЧ:ММ, одно на всю бригаду) + ФИО; в бланке строка на человека: всего 10, на работу до 5.
+// jobs.steps -- для тех. отчёта; work (описания построчно), workers, crew собираются из них -- книга ввода не меняется.
+// Старая запись без steps -- одна работа из work/workers без времени.
+const ST_ROWS = 10, ST_CREW = 5;
+// представители завода (01.11.2026, решение пользователя): работу делали представители -- только эта отметка, без фамилий
+// и без числа людей (выбор фамилии её снимает и наоборот); в бланке -- одна строка ФИО «Представители завода», количество пусто
+const REP = "Представители завода";
+const people = (who) => who.filter((n) => n !== REP);
+// список «Описание работ» тех. отчёта (демо: сокращённый)
+const WORKS = /*WORKS*/["Диагностика гидравлической системы", "Диагностика электрооборудования", "Диагностика с помощью сканера", "Выезд в карьер. Диагностика неисправности", "Перегон самосвала на ремонтную площадку", "Пробный выезд", "Замена масляных фильтров ДВС", "Замена топливных фильтров", "Замена фильтров системы охлаждения", "Доливка масла", "Доливка охлаждающей жидкости", "Заправка системы кондиционирования", "Замена РВД", "Замена уплотнения", "Замена приводного ремня", "Замена предохранителя", "Замена реле", "Замена датчика", "Замена щёток стеклоочистителя", "Протяжка резьбовых соединений", "Протяжка РВД", "Удаление залома болта. Установка нового болта", "Сварочные работы", "Демонтаж", "Монтаж", "Ремонт электропроводки", "Чистка контактов разъёмов", "Настройка параметров системы АЦСС", "Развоздушивание топливной системы", "Сброс давления гидравлической системы", "Переуплотнение соединения", "Проверка на утечку", "Натяжка продольных тяг", "Подкачка шин", "Уборка рабочего места", "Слив ОЖ", "Устранение заломов болтов соединения холодной и горячей частей ТКР", "Диагностика АЦСС", "Закачка ОЖ", "Обвязка топливного бака", "Диагностика", "Диагностика электропроводки", "Диагностика ДВС", "Ремонт трапеции привода стеклоочистителя", "Замена сальника вала привода зарядного генератора", "Ремонт крепления трапеции к эл.мотору привода стеклоочистителя", "Регулировка трапеции привода стеклоочистителя", "Диагностика эл.проводки", "Продолжение диагностики эл.проводки", "Подготовка к монтажу", "Монтаж водяного насоса", "Удаление заломов с ПЛ ТКР", "Монтаж выпускных коллекторов", "Замена уплотнения на трубке слива масла с ПЛ ТКР", "Ремонт фишки датчика скорости переднего правого колеса (демонтаж косы, пайка контактов, монтаж косы)", "Очистка фишек CAN-шины", "Подготовка к удалению заломов (демонтаж выпускных коллекторов)", "Удаление заломов выпускного коллектора 12 цилиндра", "Подготовка к ремонту", "Устранение заломов с ЗП ТКР", "Монтаж ТКР", "Запуск, осмотр на наличие утечек", "Очистка пинов плат управления", "Выезд специалиста в карьер для диагностики АС в процессе эксплуатации", "Произвели замену РВД", "Зарядка АКБ", "Подготовка к монтажу ГБЦ 12 цилиндра", "Монтаж ГБЦ 12 цилиндра", "Выезд в карьер", "Монтаж выпускного коллектора", "Диагностика термостатов", "Запуск ДВС", "Диагностика продольных тяг", "Отказ", "Протяжка уголка масляного клапана", "Ремонт клавиши включения эл.мотора", "Ремонт хомута", "Ремонт эл.мотора привода стеклоочистителя", "Диагностика ДВС с подключением ПК", "Переуплотнение и протяжка резьбовых соединений манометров давления", "Подготовка к усилению крепления топливного бака", "Демонтаж крепления топливного бака", "Подготовка к модернизации", "Модернизация крепления топливного бака", "Продолжение модернизации крепления топливного бака", "Подготовка к сварке крепления противотуманной фары", "Подключение АС, запуск, осмотр на наличие утечек", "Монтаж модернизированного крепления топливного бака", "Сварочные работы козырька грузовой платформы", "Замена пыльников рулевых гидроцилиндров", "Демонтаж ЗП ТКР", "Диагностика стеклоочистителя", "Удаление заломов с ЗП ТКР", "Монтаж ЗП ТКР", "Ремонт клавиши сиденья оператора", "Замена сальника насоса подъема", "Демонтаж сальника", "Демонтаж топливных трубок", "Замена уплотнений", "Монтаж топливных трубок", "Демонтаж форсунки", "Демонтаж крышки клапанов", "Монтаж форсунки", "Протяжка топливного бака", "Диагностика бортового монитора", "Замена топливной форсунки", "Демонтаж топливной форсунки", "Замена термостатов", "Демонтаж ГБЦ 3 цилиндра", "Демонтаж РВД", "Монтаж РВД", "Модернизация плиты крепления насосов", "Продолжение закачки ОЖ", "Осмотр ДВС", "Демонтаж масляных фильтров", "Диагностика эл.мотора привода жалюзи", "Замена фильтра сепаратора", "Замена фильтра сепаратора и фильтра тормозной линии", "Демонтаж датчика", "Очистка датчика", "Монтаж датчика", "Диагностика топливной системы", "Чистка коллектора УВТР", "Чистка датчика скорости", "Диагностика рулевой колонки", "Демонтаж рулевой колонки", "Демонтаж рулевого колеса", "Монтаж рулевой колонки", "Ремонт эл.проводки подрулевого переключателя", "Зарядка АКБ, отогрев ДВС", "Осмотр рулевой колонки", "Диагностик неисправности", "Ремонт фишки датчика скорости", "Подвязка эл.проводки датчика скорости", "Монтаж пальца", "Установка плашки крепления пальца", "Протяжка болтов крепления топливного бака", "Демонтаж горячей части ТКР", "Продолжение перестановки теплообменника", "Демонтаж рулевого насоса", "Осмотр стыка насосов", "Монтаж рулевого насоса", "Пусконаладочные работы", "Удаление заломов с ПЛ и ПП ТКР", "Замена противотуманной фары", "Замена уплотнений сливных трубок задних ТКР", "Подключение теплообменника", "Диагностика неисправности", "Диагностика эл.мотора", "Перестановка эл.мотора", "Продолжение диагностики АЦСС", "Монтаж масляных фильтров", "Подготовка к аварийной разгрузке", "Аварийная разгрузка АС", "Протяжка уголка", "Осмотр соединения ТГ и ДВС", "Дефектовка усилителя", "Спуск воздуха с АЦСС", "Ремонт насоса АЦСС", "Демонтаж водяного насоса", "Зачистка посадочного места", "Демонтаж защиты ремня привода зарядного генератора", "Демонтаж шкива", "Замена РВД смазки", "Очистка контактов фишки", "Укладка кабеля УСПВЛ", "Проверка УСПВЛ", "Демонтаж ТНВД", "Перекомплектовка ТНВД", "Монтаж ТНВД", "Обвязка ТНВД", "Осмотр оптоволокна", "Демонтаж хомута", "Очистка контактов фишки датчика давления масла в топливном насосе"]/*/WORKS*/;
+const hhmm = (d = new Date()) => String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+const isHm = (s) => /^\d\d:\d\d$/.test(s || "");
+function stepsOf(j) {
+  // legacy -- работа внесена до появления d: смена неизвестна, при сохранении d не ставим
+  if (Array.isArray(j?.steps) && j.steps.length) return j.steps.map((w) => ({ t: w.t || "", from: w.from || "", to: w.to || "", who: [...(w.who || [])], d: w.d || "", legacy: !w.d }));
+  return [{ t: j?.work || "", from: "", to: "", who: [...(j?.workers || [])], d: "", legacy: !!(j?.work || j?.workers?.length) }];
+}
+function stDur(a, b) {
+  if (!isHm(a) || !isHm(b)) return "";
+  const m = (t) => +t.slice(0, 2) * 60 + +t.slice(3), d = (m(b) - m(a) + 1440) % 1440;   // как «Итого» в бланке: MOD(окончание - начало; 1)
+  return d >= 60 ? `${Math.floor(d / 60)} ч ${String(d % 60).padStart(2, "0")} мин` : `${d} мин`;
+}
+const stRows = () => S.edit.steps.reduce((s, w) => s + Math.max(1, w.who.length), 0);
+function drawSteps() {
+  const e = S.edit, box = $("#steps"); if (!box) return;
+  if (!e.can) {
+    box.innerHTML = e.steps.filter((w) => w.t || w.who.length).map((w) => `<div class="work"><div class="wh"><b>${esc(w.t || "—")}</b></div>
+      <div class="pnote" style="margin-top:0">${w.from || w.to ? `${w.from || "…"} – ${w.to || "…"}${stDur(w.from, w.to) ? " · " + stDur(w.from, w.to) : ""} · ` : ""}${esc(w.who.join(", ") || "без фамилий")}</div></div>`).join("")
+      || `<div class="pnote">Нет</div>`;
+    return drawStRows();
+  }
+  box.innerHTML = e.steps.map((w, i) => `<div class="work" data-i="${i}">
+      <div class="wh"><b>Работа ${i + 1}</b>${e.steps.length > 1 ? `<button class="iconbtn" data-act="stdel" title="Убрать работу">✕</button>` : ""}</div>
+      <label class="f">Описание работ</label>
+      <textarea class="inp" data-sf="t" placeholder="Что сделали">${esc(w.t)}</textarea>
+      <input class="inp" data-sf="q" style="margin-top:6px" placeholder="Найти в списке тех. отчёта: слова" autocomplete="off"><div class="sug"></div>
+      <label class="f">Время воздействия</label>
+      <div class="tmw">
+        <div class="cell"><span class="cap">Начало работ</span><button class="inp tval ${w.from ? "" : "nil"}" data-act="tpick" data-sf="from">${w.from || "—"}</button><button class="btn" data-act="stfrom">Сейчас</button></div>
+        <div class="cell"><span class="cap">Окончание работ</span><button class="inp tval ${w.to ? "" : "nil"}" data-act="tpick" data-sf="to">${w.to || "—"}</button><button class="btn" data-act="stto">Сейчас</button></div>
+      </div>
+      <div class="tot"></div>
+      <div class="who"></div>
+      <input class="inp" data-sf="wq" style="margin-top:8px" placeholder="Найти исполнителя: фамилия" autocomplete="off">
+    </div>`).join("");
+  e.steps.forEach((w, i) => { drawStTot(i); drawStWho(i); });
+  box.querySelectorAll("textarea").forEach((ta) => fitTa(ta));
+  drawStRows();
+}
+const stBox = (i) => $(`#steps .work[data-i="${i}"]`);
+function drawStRows() {
+  const u = stRows(), el = $("#stRows");
+  el.textContent = `строк в тех. отчёте: ${u} из ${ST_ROWS}`; el.classList.toggle("full", u > ST_ROWS);
+  const w = $("#stWarn"); if (w) w.innerHTML = u > ST_ROWS && S.edit.can ? `<div class="warn">В тех. отчёте ${ST_ROWS} строк работ — лишнее не поместится. Объедините работы или уберите людей.</div>` : "";
+}
+function drawStTot(i) {
+  const w = S.edit.steps[i], d = stDur(w.from, w.to);
+  stBox(i).querySelector(".tot").innerHTML = d ? `Итого: <b>${d}</b>`
+    : i === 0 && !w.from && !w.to ? "Время не указано — в тех. отчёт пойдёт заезд и готовность (выезд)" : "Итого: —";
+}
+// ФИО: отмеченные, недавние на этом телефоне (одно касание), поиск по справочнику workers; новый -- «＋ Фамилия И.О.» только в запись
+function drawStWho(i) {
+  const e = S.edit, w = e.steps[i], box = stBox(i), raw = box.querySelector('[data-sf="wq"]').value.trim(), q = norm(raw);
+  const chip = (n, on, sub = "") => `<button class="chip ${on ? "on" : ""}" data-act="wk" data-n="${esc(n)}">${on || !sub ? esc(n) : sub}</button>`;
+  let more = "";
+  if (q.length >= 2) {
+    const act = S.workers.filter((x) => x.active && !w.who.includes(x.name));
+    const hits = [...act.filter((x) => norm(x.name).startsWith(q)), ...act.filter((x) => !norm(x.name).startsWith(q) && norm(x.name).includes(q))].slice(0, 12);
+    const typed = fio(raw), known = typed && S.workers.some((x) => norm(x.name) === norm(typed));
+    more = hits.map((x) => chip(x.name, false, `${esc(x.name)}${x.grp === "слесарь" ? "" : ` <small>${esc(x.grp)}</small>`}`)).join("")
+      + (typed && !known && !w.who.includes(typed) ? chip(typed, false, `＋ ${esc(typed)} <small>нет в списке</small>`) : "")
+      + (!hits.length && !typed ? `<div class="pnote">Не найдено. Чтобы вписать нового — Фамилия И.О.</div>` : "");
+  } else more = load("rz_wk_recent", []).filter((n) => n !== REP && !w.who.includes(n)).slice(0, 8).map((n) => chip(n, false)).join("");
+  const prev = i ? e.steps[i - 1].who : load("rz_wk_last", []), old = !i && !w.who.length && e.j?.crew;
+  const same = !prev.length || prev.every((n) => w.who.includes(n)), np = people(w.who).length;
+  box.querySelector(".who").innerHTML = `<label class="f">ФИО специалиста${np ? ` · ${np} чел.` : w.who.includes(REP) ? "" : old ? ` · указано ${e.j.crew} чел. без фамилий` : ""}</label>
+    <div class="wk">${people(w.who).map((n) => chip(n, true)).join("")}${chip(REP, w.who.includes(REP))}${more}</div>
+    ${same ? "" : `<button class="link wkl" data-act="stsame">${i ? `Те же, что в работе ${i}` : "Как в прошлый раз"}: ${esc(prev.join(", "))}</button>`}`;
+}
+function drawStSug(i) {
+  const box = stBox(i), q = norm(box.querySelector('[data-sf="q"]').value.trim()), ws = q.split(/\s+/);
+  const hits = q.length >= 2 ? WORKS.filter((x) => ws.every((p) => norm(x).includes(p))).slice(0, 8) : [];
+  box.querySelector(".sug").innerHTML = hits.length ? `<div class="tmcres">${hits.map((x) => `<button data-act="stpick" data-v="${esc(x)}">${esc(x)}</button>`).join("")}</div>`
+    : q.length >= 2 ? `<div class="pnote">В списке не найдено — впишите своими словами</div>` : "";
+}
+function rememberWorkers(xs) {   // недавние -- первыми, до 15; «как в прошлый раз» -- последний сохранённый состав
+  if (!xs.length) return;
+  save("rz_wk_last", xs);
+  save("rz_wk_recent", [...xs, ...load("rz_wk_recent", []).filter((n) => !xs.includes(n))].slice(0, 15));
+}
+// ---------- прайс ТМЦ (30.10.2026, решение пользователя): кэш в телефоне, сверка раз в 3 суток ----------
+let PRICE = null;
+const norm = (s) => s.toLowerCase().replace(/ё/g, "е");
+function priceRows(text) {
+  // ключ поиска: артикулы и наименование + артикулы без пробелов/дефисов/точек/косых
+  return text ? text.split("\n").map((l) => { const [a, b, n] = l.split("\t");
+    return { a, n, k: norm(`${a} ${b} ${n} ${(a + b).replace(/[\s\-./]/g, "")}`) }; }) : [];
+}
+async function loadPrice() {
+  if (!PRICE) { const c = load("rz_price", null); if (c) PRICE = { got: c.got, rows: priceRows(c.text) }; }
+  if (!S.me || !navigator.onLine || (PRICE && Date.now() - PRICE.got < 3 * 86400000)) return;
+  try {
+    const { data, error } = await sb.rpc("tmc_list");
+    if (error) throw error;
+    PRICE = { got: Date.now(), rows: priceRows(data.data) }; save("rz_price", { got: PRICE.got, text: data.data });
+  } catch {}
+}
+function drawTmc() {
+  const q = norm($("#fTmcQ").value.trim()), box = $("#tmcList");
+  if (q.length < 2) { box.innerHTML = ""; return; }
+  if (!PRICE?.rows.length) {
+    box.innerHTML = `<div class="warn">${navigator.onLine ? "Прайс загружается…" : "Прайс ещё не загружен — нужна связь. Впишите вручную."}</div>`;
+    return void loadPrice().then(() => { if (PRICE?.rows.length && $("#fTmcQ")) drawTmc(); });
+  }
+  const ws = q.split(/\s+/), hits = [];
+  PRICE.rows.some((r, i) => { if (ws.every((w) => r.k.includes(w))) hits.push(i); return hits.length >= 30; });
+  box.innerHTML = hits.length ? `<div class="tmcres">${hits.map((i) => `<button data-act="tmc" data-i="${i}"><b>${esc(PRICE.rows[i].a)}</b> ${esc(PRICE.rows[i].n)}</button>`).join("")}</div>`
+    : `<div class="warn">В прайсе не найдено — впишите вручную.</div>`;
+}
+// ---------- фото к записи: сжатие на телефоне, хранилище photos/<запись>/<uuid>.jpg, на ПК их забирает приложение для ПК
+function addPhoto(p) { const a = S.photos.get(p.job_id) || []; if (!a.some((x) => x.id === p.id)) { a.push(p); S.photos.set(p.job_id, a); } }
+function dropPhoto(id) { for (const [k, a] of S.photos) { const b = a.filter((x) => x.id !== id); if (b.length) S.photos.set(k, b); else S.photos.delete(k); } }
+const findPhoto = (id) => [...S.photos.values()].flat().find((x) => x.id === id);
+function drawPhotos() {
+  const box = $("#fPhotos"), j = S.edit?.j; if (!box || !j) return;
+  const ps = S.photos.get(j.id) || [];
+  box.innerHTML = (S.edit.can ? `<label class="add"><b>📷</b>${S.upl ? esc(S.upl) : "Добавить"}
+      <input type="file" accept="image/*" multiple ${S.upl ? "disabled" : ""}></label>` : "")
+    + ps.map((p) => `<img data-act="photo" data-id="${p.id}" src="${S.purl.get(p.path) || ""}" alt="Фото">`).join("")
+    + (!S.edit.can && !ps.length ? `<span class="pnote">Нет фото</span>` : "");
+  box.querySelector("input")?.addEventListener("change", (e) => addPhotos([...e.target.files]));
+  photoUrls(ps);
+}
+async function photoUrls(ps) {   // ссылки на просмотр -- на 6 ч, обновляются через 5 ч
+  if (Date.now() - S.purlAt > 5 * 3600000) { S.purl.clear(); S.purlAt = Date.now(); }
+  const need = ps.map((p) => p.path).filter((x) => !S.purl.has(x));
+  if (!need.length || !navigator.onLine) return;
+  need.forEach((x) => S.purl.set(x, ""));
+  const { data } = await sb.storage.from("photos").createSignedUrls(need, 6 * 3600);
+  (data || []).forEach((x) => x.signedUrl && S.purl.set(x.path, x.signedUrl));
+  need.forEach((x) => { if (!S.purl.get(x)) S.purl.delete(x); });   // не получили ссылку (плохая связь) -- при следующем показе запросить снова, а не ждать 5 ч
+  if (data?.some((x) => x.signedUrl)) drawPhotos();
+}
+async function shrink(file) {   // до 1600 px, JPEG 0.8: ~200–400 КБ вместо 3–5 МБ; поворот по EXIF делает браузер
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    await new Promise((ok, bad) => { img.onload = ok; img.onerror = () => bad(new Error("не удалось открыть снимок")); img.src = url; });
+    const k = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement("canvas");
+    c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    return await new Promise((ok, bad) => c.toBlob((b) => (b ? ok(b) : bad(new Error("не удалось сжать"))), "image/jpeg", 0.8));
+  } finally { URL.revokeObjectURL(url); }
+}
+async function addPhotos(files) {
+  const j = S.edit?.j; if (!j || !files.length) return;
+  if (!navigator.onLine) return toast("Нет связи — фото не отправлено. Добавьте, когда появится связь", true);
+  let ok = 0;
+  for (const [i, f] of files.entries()) {
+    S.upl = files.length > 1 ? `${i + 1} из ${files.length}` : "Отправка…"; drawPhotos();
+    try {
+      const blob = await shrink(f), path = `${j.id}/${uuid()}.jpg`;
+      const up = await sb.storage.from("photos").upload(path, blob, { contentType: "image/jpeg" });
+      if (up.error) throw up.error;
+      const { data, error } = await sb.rpc("photo_add", { p_job: j.id, p_path: path });
+      if (error) { sb.storage.from("photos").remove([path]); throw error; }
+      S.purl.set(path, URL.createObjectURL(blob)); addPhoto(data); ok++;
+    } catch (e) { toast("Фото не отправлено: " + (netErr(e) ? "нет связи" : e.message || e), true); break; }
+  }
+  S.upl = ""; drawPhotos(); render();
+  if (ok) toast(ok === 1 ? "Фото отправлено" : `Фото отправлено: ${ok}`);
+}
+function viewPhoto(p) {
+  const v = $("#pview"), mine = !S.past && !S.edit?.ro && (p.staff_id === S.me.id || isAdmin());
+  v.innerHTML = `<img src="${S.purl.get(p.path) || ""}" alt="Фото" data-act="pclose"><div class="bar"><span>${when(p.created_at)}</span>
+    <button class="btn small" data-act="psave" data-id="${p.id}">Сохранить</button>
+    ${mine ? `<button class="btn small" data-act="pdel" data-id="${p.id}">Удалить</button>` : ""}<button class="btn small dark" data-act="pclose">Закрыть</button></div>`;
+  v.hidden = false;
+  S.pblob = null; photoBlob(p).catch(() => {});   // заранее: на iPhone окно «Сохранить» открывается только сразу после нажатия
+}
+async function photoBlob(p) {
+  if (S.pblob?.id === p.id) return S.pblob.blob;
+  const url = S.purl.get(p.path);
+  if (!url) throw new Error("фото ещё не загрузилось");
+  const r = await fetch(url);
+  if (!r.ok) throw new Error("фото не найдено на сервере");
+  const blob = await r.blob();
+  S.pblob = { id: p.id, blob };
+  return blob;
+}
+// имя файла: «209 03.11.2026 14-30.jpg»
+function photoName(p) {
+  const d = new Date(p.created_at), two = (n) => String(n).padStart(2, "0");
+  const gar = String(S.edit?.j?.gar || S.jobs.get(p.job_id)?.gar || "Фото").replace(/[\\/:*?"<>|]+/g, " ").trim();
+  return `${gar} ${two(d.getDate())}.${two(d.getMonth() + 1)}.${d.getFullYear()} ${two(d.getHours())}-${two(d.getMinutes())}.jpg`;
+}
+// на iPhone -- системное окно («Сохранить изображение» кладёт в «Фото»); на Android и ПК -- обычное скачивание файла
+async function savePhoto(id) {
+  const p = findPhoto(id); if (!p) return;
+  const ready = S.pblob?.id === id;
+  try {
+    const blob = await photoBlob(p), file = new File([blob], photoName(p), { type: "image/jpeg" });
+    if (/iphone|ipad/i.test(navigator.userAgent) && navigator.canShare?.({ files: [file] })) {
+      try { await navigator.share({ files: [file] }); }
+      catch (e) {
+        if (e.name === "AbortError") return;
+        if (e.name === "NotAllowedError" && !ready) return toast("Фото загружено — нажмите «Сохранить» ещё раз");
+        throw e;
+      }
+      return;
+    }
+    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: file.name });
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  } catch (e) { toast("Фото не сохранено: " + (netErr(e) ? "нет связи" : e.message || e), true); }
+}
+async function delPhoto(id) {
+  const p = findPhoto(id); if (!p || !confirm("Удалить фото? Если оно уже на ПК, там копия останется.")) return;
+  const rm = await sb.storage.from("photos").remove([p.path]);
+  const { error } = rm.error ? rm : await sb.rpc("photo_del", { p_id: id });
+  if (error) return toast("Не удалось удалить: " + (netErr(error) ? "нет связи" : error.message), true);
+  dropPhoto(id); $("#pview").hidden = true; drawPhotos(); render();
+}
+// ---------- выбор времени барабанами (01.11.2026, макет «Стиль iPhone»): одинаково на iPhone, Android и ПК ----------
+// заезд / готова / выезд -- день + часы + минуты, значение в скрытом поле (как прежде в datetime-local); работы -- ЧЧ:ММ
+const DAYS = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"], MON = ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+const midnight = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+const dayName = (d) => { const k = Math.round((midnight(d) - midnight(new Date())) / 864e5);
+  return k === 0 ? "Сегодня" : k === -1 ? "Вчера" : k === 1 ? "Завтра" : `${DAYS[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}`; };
+const tBtn = (id, title, dis) => `<button class="inp tval" data-act="tpick" data-for="${id}" data-t="${title}" ${dis}></button>`;
+function tShow(id) {
+  const b = document.querySelector(`.tval[data-for="${id}"]`); if (!b) return;
+  const v = $("#" + id).value, d = v && new Date(v);
+  b.textContent = v ? `${dayName(d)}, ${hm(d)}` : id === "fEnd" ? "не выехала" : "—"; b.classList.toggle("nil", !v);
+}
+function setStTime(i, f, v) {
+  S.edit.steps[i][f] = v;
+  const b = stBox(i).querySelector(`.tval[data-sf="${f}"]`); b.textContent = v || "—"; b.classList.toggle("nil", !v);
+  drawStTot(i);
+}
+let TP = null;
+const WH = 36;   // высота строки барабана, px (= .wheel .it)
+const MSTEP = 5;   // шаг минут в барабане
+function wheel(items, sel, cls = "") {
+  const el = document.createElement("div"); el.className = "wheel " + cls;
+  el.innerHTML = `<div class="wsp"></div>${items.map((t, i) => `<div class="it" data-i="${i}">${t}</div>`).join("")}<div class="wsp"></div>`;
+  const mark = () => { const i = Math.round(el.scrollTop / WH); el.querySelectorAll(".it").forEach((x, k) => x.classList.toggle("sel", k === i)); };
+  el.addEventListener("scroll", () => requestAnimationFrame(mark));
+  el.addEventListener("click", (e) => { const it = e.target.closest(".it"); if (it) el.scrollTo({ top: +it.dataset.i * WH, behavior: "smooth" }); });
+  el.init = () => { el.scrollTop = sel * WH; mark(); };   // после показа листа: скрытому прокрутку не задать
+  return el;
+}
+function openTp(t) {
+  // минуты -- шагом 5 (решение пользователя 01.11.2026: меньше листать); значение не кратно 5 -- ближайшее
+  const box = $("#wheels"), H = Array.from({ length: 24 }, (_, k) => pad2(k)), M = Array.from({ length: 60 / MSTEP }, (_, k) => pad2(k * MSTEP));
+  const mi = (m) => Math.min(M.length - 1, Math.round(m / MSTEP));
+  const colon = () => Object.assign(document.createElement("div"), { className: "colon", textContent: ":" });
+  box.innerHTML = "";
+  if (t.dataset.sf) {
+    const i = +t.closest(".work").dataset.i, f = t.dataset.sf, v = S.edit.steps[i][f], cur = isHm(v) ? v : hhmm();
+    TP = { i, f }; $("#tpTitle").textContent = f === "from" ? "Начало работ" : "Окончание работ"; $("#tpClear").hidden = !v;
+    box.append(wheel(H, +cur.slice(0, 2)), colon(), wheel(M, mi(+cur.slice(3))));
+  } else {
+    // дни: неделя назад (или с дня значения, если раньше) … завтра
+    const id = t.dataset.for, v = $("#" + id).value, cur = v ? new Date(v) : new Date();
+    const ago = Math.round((midnight(new Date()) - midnight(cur)) / 864e5), back = Math.max(7, ago);
+    const days = Array.from({ length: back + 2 }, (_, k) => { const d = midnight(new Date()); d.setDate(d.getDate() - back + k); return d; });
+    TP = { id, days }; $("#tpTitle").textContent = t.dataset.t; $("#tpClear").hidden = !(id === "fEnd" && v);
+    box.append(wheel(days.map(dayName), Math.min(days.length - 1, Math.max(0, back - ago)), "day"), wheel(H, cur.getHours()), colon(), wheel(M, mi(cur.getMinutes())));
+  }
+  $("#tpick").hidden = false;
+  box.querySelectorAll(".wheel").forEach((w) => w.init());
+}
+function doneTp() {
+  const ws = [...$("#wheels").querySelectorAll(".wheel")].map((w) => Math.min(w.querySelectorAll(".it").length - 1, Math.max(0, Math.round(w.scrollTop / WH))));
+  if (TP.f) setStTime(TP.i, TP.f, `${pad2(ws[0])}:${pad2(ws[1] * MSTEP)}`);
+  else { const d = TP.days[ws[0]]; $("#" + TP.id).value = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(ws[1])}:${pad2(ws[2] * MSTEP)}`; tShow(TP.id); }
+  closeTp();
+}
+function closeTp() { $("#tpick").hidden = true; TP = null; }
+function closeSheet() { $("#sheet").hidden = true; S.edit = null; }
+function saveJob(exitNow) {
+  const e = S.edit, j = e.j;
+  // пока карточка была открыта: запись удалили или её изменил другой сотрудник (иначе его изменения затёрлись бы)
+  if (j && !j.id.startsWith("q:")) {
+    const now = S.jobs.get(j.id), mine = S.queue.some((q) => (j.client_id && q.cid === j.client_id) || q.id === j.id);
+    if (!now) { toast(`${j.gar}: запись уже удалена — изменения не сохранены`, true); return closeSheet(); }
+    if (e.rev != null && now.rev !== e.rev && !mine
+      && !confirm(`Запись ${j.gar} изменили, пока вы её правили.\n\nОК — сохранить ваш вариант (изменения другого пропадут).\nОтмена — открыть запись заново с новыми данными.`)) return openJob(j.id);
+  }
+  const gar = $("#fGar").value.trim();
+  if (!S.machines.some((m) => m.gar === gar)) return toast("Выберите гаражный номер из списка", true);
+  const started = fromInput($("#fStart").value);
+  if (!started) return toast("Укажите время заезда", true);
+  let ended = j ? fromInput($("#fEnd")?.value) : null;
+  if (exitNow) ended = new Date().toISOString();
+  // таблицы считают по минутам: выезд -- хотя бы на минуту позже заезда
+  if (ended && Math.floor(new Date(ended) / 60000) <= Math.floor(new Date(started) / 60000)) return toast("Выезд должен быть позже заезда (хотя бы на минуту)", true);
+  if (new Date(started) > new Date(Date.now() + 10 * 60000)) return toast("Время заезда в будущем — проверьте", true);
+  if (ended && new Date(ended) > new Date(Date.now() + 10 * 60000)) return toast("Время выезда в будущем — проверьте", true);
+  const ready = j ? fromInput($("#fReady").value) : null;
+  const wait = !ready ? "" : e.wait === "Другое" ? $("#fWaitOther").value.trim() : e.wait;
+  if (ready && !wait) return toast("Укажите, чего ждёт машина", true);
+  if (ready && new Date(ready) < new Date(started)) return toast("Готовность раньше заезда — проверьте время", true);
+  if (ready && ended && new Date(ended) < new Date(ready)) return toast("Выезд раньше готовности — проверьте время", true);
+  if (ready && new Date(ready) > new Date(Date.now() + 10 * 60000)) return toast("Время готовности в будущем — проверьте", true);
+  const motoS = $("#fMoto").value.replace(",", ".").trim();
+  if (motoS && !/^\d+(\.\d+)?$/.test(motoS)) return toast("Моточасы — числом", true);
+  const insp = {};
+  for (const [k] of INSP) if (e.insp[k]) insp[k] = e.insp[k];
+  for (const [k, t] of PINS) {
+    const v = String(e.insp[k] ?? "").replace(",", ".").trim();
+    if (v && !/^(\d+(\.\d*)?|\.\d+)$/.test(v)) return toast(`Шкворень ${t} — числом`, true);
+    if (v) insp[k] = v.replace(/^\./, "0.");   // «,89» -- как 0.89: в таблицу отметок показание идёт текстом
+  }
+  // как в книге ввода (CapFirst): первая буква каждой строки неисправности и работы -- заглавная, строка с цифры не трогается
+  const cap = (s) => s.trim().replace(/(^|\n)(\s*)([a-zа-яё])/g, (m, a, b, c) => a + b + c.toUpperCase());
+  // пустые работы не сохраняем; описание можно не заполнять (решение пользователя 01.11.2026) -- в тех. отчёте строка с временем и ФИО;
+  // в «Сделано» книги -- описания построчно (переносы внутри описания бланк сведёт через «; »)
+  const steps = e.steps.map((w) => ({ t: cap(w.t), from: isHm(w.from) ? w.from : "", to: isHm(w.to) ? w.to : "", who: [...w.who], d: w.d || (w.legacy ? "" : stKey(w.from)) }))
+    .filter((w) => w.t || w.from || w.to || w.who.length);
+  const workers = [...new Set(steps.flatMap((w) => w.who))];
+  const data = { gar, area: e.area, inspect: Object.keys(insp).length ? insp : null, kind: e.kind, started_at: started, ended_at: ended, fault: cap($("#fFault").value), work: steps.map((w) => w.t).filter(Boolean).join("\n"),
+    moto: motoS ? +motoS : null, tmc: $("#fTmc").value.trim(), note: $("#fNote").value.trim(), ready_at: ready, wait_reason: wait,
+    steps: steps.length ? steps : null, workers, crew: people(workers).length ? Math.min(people(workers).length, 20) : (j?.crew ?? null) };
+  rememberWorkers(people(steps.at(-1)?.who || []));
+  if (!j) {
+    const dup = allJobs().find((x) => !x.ended_at && x.gar === gar);
+    if (dup && !confirm(`Машина ${gar} уже на площадке (заезд ${fmt(dup.started_at)}). Всё равно создать новую запись?`)) return;
+    enqueue(uuid(), data, true);
+    toast(`${gar}: заезд отмечен ${hm(new Date(started))}`);
+  } else {
+    const cid = j.client_id || null;
+    enqueue(cid, data, false, j.id.startsWith("q:") ? null : j.id);
+    toast(`${gar}: ${exitNow ? "выезд отмечен" : "сохранено"}`);
+  }
+  closeSheet();
+}
+
+// ---------- администратор ----------
+async function callAdmin(body) {
+  try {
+    const { data, error } = await sb.functions.invoke("staff-admin", { body });
+    if (error) { let m = error.message; try { m = (await error.context.json()).error || m; } catch {} return { error: m }; }
+    return data;
+  } catch (e) { return { error: netErr(e) ? "Нет связи с сервером" : String(e.message || e) }; }
+}
+// карточка сотрудника -- только у владельца: ФИО, роль, PIN, отключение, удаление
+function openStaff(id) {
+  const s = S.staff.find((x) => x.id === id), self = s.id === S.me.id;
+  S.edit = { staff: s, role: s.role, site: s.site };
+  $("#panel").innerHTML = `<div class="head"><button class="nb" data-act="close">Отмена</button><b>${esc(s.name)}${s.owner ? `<small>владелец</small>` : ""}</b>
+    <button class="nb r" data-act="savestaff">Сохранить</button></div>
+    <label class="f">Фамилия И.О. — как в таблицах</label><input class="inp" id="seName" value="${esc(s.name)}">
+    <label class="f">Роль</label><div class="chips" id="seRole">${[["mechanic", "Механик"], ["admin", "Администратор"]].map(([v, t]) =>
+      `<button class="chip ${s.role === v ? "on" : ""}" data-act="serole" data-v="${v}" ${self ? "disabled" : ""}>${t}</button>`).join("")}</div>
+    <label class="f">Участок</label><div class="chips" id="seSite">${SITES.map((v) =>
+      `<button class="chip ${s.site === v ? "on" : ""}" data-act="sesite" data-v="${v}">${v}</button>`).join("")}</div>
+    <div class="actions"><button class="btn red" data-act="savestaff">Сохранить</button></div>
+    <h2>Доступ</h2>
+    <div class="row"><button class="btn" data-act="pin" data-id="${s.id}">Новый PIN</button>
+      ${self ? "" : `<button class="btn" data-act="active" data-id="${s.id}" data-on="${s.active ? 0 : 1}">${s.active ? "Отключить" : "Включить"}</button>`}</div>
+    ${self ? "" : `<h2>Удаление</h2><div style="font-size:14px;color:var(--muted)">Учётная запись удаляется насовсем. Записи о работах остаются с его фамилией.</div>
+      <div class="actions"><button class="btn" style="color:var(--red);border-color:var(--red)" data-act="delstaff">Удалить сотрудника</button></div>`}`;
+  $("#sheet").hidden = false;
+}
+// участок: кнопка в полосе смены; работы и уведомления приходят только своего участка (ограничение на сервере)
+function openSite() {
+  $("#panel").innerHTML = `<div class="head"><span></span><b>Участок</b><button class="nb r" data-act="close">Закрыть</button></div>
+    <div style="font-size:15px;color:var(--muted);margin:16px 16px 0">Работы и уведомления — только своего участка. Перевели на другой — выберите его здесь.</div>
+    <div class="sitepick">${SITES.map((v) => `<button class="${S.me.site === v ? "on" : ""}" data-act="setsite" data-v="${v}">${v}</button>`).join("")}</div>`;
+  $("#sheet").hidden = false;
+}
+// сообщение в общий чат за выбранную смену (01.11.2026, решение пользователя): записи участка с одной вкладки (Площадка или ТО).
+// Входят: заехавшие или выехавшие в смену и начатые раньше, если запись меняли в эту смену («Продолжение ремонта»).
+// Площадка: стоят с прошлых смен, запись не менялась с начала смены -- вверху списком «Без воздействия», как в чате; на ТО этого списка нет.
+// src -- записи прошлой смены с сервера; менялась ли запись в ту смену -- по updated_at или по работам с d этой смены
+function chatText(sh, area, src = allJobs()) {
+  const st = sh.start.getTime(), en = st + SHIFT_LEN, T = (x) => x ? new Date(x).getTime() : 0, inS = (t) => t >= st && t < en, key = shKey(sh);
+  const worked = (j) => Array.isArray(j.steps) && j.steps.some((w) => w.d === key);
+  const js = src.filter((j) => areaOf(j) === area && (j.site || S.me.site) === S.me.site).sort((a, b) => T(a.started_at) - T(b.started_at));
+  const stayed = (j) => T(j.started_at) < st && (!j.ended_at || T(j.ended_at) >= en);
+  const xs = js.filter((j) => inS(T(j.started_at)) || inS(T(j.ended_at)) || (stayed(j) && (inS(T(j.updated_at)) || worked(j))));
+  const idle = area === "ТО" ? [] : js.filter((j) => stayed(j) && !xs.includes(j));
+  if (!xs.length && !idle.length) return "";
+  const lines = (s) => String(s || "").split("\n").map((x) => x.trim()).filter(Boolean);
+  const block = (j) => {
+    const s = new Date(j.started_at), old = s.getTime() < st, out = j.ended_at && T(j.ended_at) < en ? new Date(j.ended_at) : null;
+    return [j.gar, j.moto ? `М/ч ${j.moto}` : "", `${old ? dm(s) + " " : ""}${hm(s)}-${out ? hm(out) : "в ремонте"}`, old ? "Продолжение ремонта" : "",
+      ...lines(j.fault), ...lines(j.work), ...lines(j.tmc).map((x) => "ТМЦ: " + x), ...(area === "ТО" ? inspLines(j) : [])].filter(Boolean).join("\n");
+  };
+  return [area === "ТО" ? `${S.me.site} ТО` : `Карьер ${S.me.site}:`, idle.map((j) => `${j.gar}\nБез воздействия`).join("\n"), ...xs.map(block)].filter(Boolean).join("\n\n");
+}
+function openChatMsg(area) {
+  const sh = S.past?.sh || myShift(), text = chatText(sh, area, S.past?.jobs);
+  if (!text) return toast(`${area}: за эту смену записей нет`);
+  $("#panel").innerHTML = `<div class="head"><span></span><b>Сообщение в чат<small>${area} · ${dm(sh.date)} · смена ${sh.n}</small></b><button class="nb r" data-act="close">Закрыть</button></div>
+    <div style="font-size:15px;color:var(--muted);margin:12px 16px 8px">Текст можно поправить перед отправкой.</div>
+    <textarea class="inp" id="chatTxt" style="min-height:50vh">${esc(text)}</textarea>
+    <div class="actions bar"><button class="btn" data-act="chatcopy">Скопировать</button>${navigator.share ? `<button class="btn red" data-act="chatshare">Отправить</button>` : ""}</div>`;
+  $("#sheet").hidden = false;
+}
+function copyChatMsg() {
+  const ta = $("#chatTxt"), manual = () => { ta.focus(); ta.select(); toast("Выделите текст и скопируйте", true); };
+  if (navigator.clipboard) navigator.clipboard.writeText(ta.value).then(() => toast("Текст скопирован"), manual);
+  else manual();
+}
+async function moveSite(site, saved) {
+  if (!saved) {
+    if (S.queue.length) return toast(`Сначала дождитесь отправки записей: ${S.queue.length}`, true);
+    const { error } = await sb.rpc("set_my_site", { p_site: site });
+    if (error) return toast(netErr(error) ? "Нет связи с сервером" : error.message, true);
+  }
+  S.me.site = site; save("rz_me", S.me); S.past = null;
+  try { await loadAll(); } catch (e) { if (!netErr(e)) toast("Ошибка загрузки: " + e.message, true); }
+  subscribe();   // «кто в приложении» -- канал нового участка
+  render(); toast("Участок: " + site);
+}
+async function reloadStaff() { const r = await sb.from("staff").select("*").order("role", { ascending: false }).order("name"); if (!r.error) S.staff = r.data; render(); }
+const randPin = () => String(Math.floor(1000 + Math.random() * 9000));
+
+// ---------- действия ----------
+let deferredInstall = null;
+window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredInstall = e; render(); });
+document.addEventListener("click", async (ev) => {
+  const t = ev.target.closest("[data-act]"); if (!t || t.disabled) return;
+  const a = t.dataset.act;
+  if (audioCtx === null) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch {} }
+  switch (a) {
+    case "find": findName(); break;
+    case "pick": L.pick = L.found.find((x) => x.login === t.dataset.login) || window.REMZONA_DEMO?.accounts().find((x) => x.login === t.dataset.login); L.pin = ""; L.err = ""; renderLogin(); break;
+    case "other": L.pick = null; L.found = []; L.q = ""; L.pin = ""; L.err = ""; renderLogin(); break;
+    case "digit": if (L.pin.length < 4) { L.pin += t.dataset.d; L.err = ""; renderLogin(); if (L.pin.length === 4) tryPin(); } break;
+    case "back": L.pin = L.pin.slice(0, -1); renderLogin(); break;
+    case "bootstrap": bootstrap(); break;
+    case "signup": signup(); break;
+    case "tosignup": L.mode = "signup"; L.err = ""; renderLogin(); break;
+    case "tologin": L.mode = ""; L.err = ""; L.pin = ""; renderLogin(); break;
+    case "newcode": if (!confirm("Сделать новый код? Старая ссылка перестанет работать (уже зарегистрированных это не касается).")) return;
+    // fallthrough
+    case "invite": {
+      if (!S.invite || a === "newcode") { const r = await callAdmin({ action: "new_code" }); if (r.error) return toast(r.error, true); S.invite = r.code; render(); return toast(`Код ${r.code} готов — нажмите «Поделиться»`); }
+      const url = location.origin + location.pathname + "?join=" + S.invite;
+      if (navigator.share) navigator.share({ title: "Ремзона", text: `Регистрация в приложении «Ремзона». Код приглашения: ${S.invite}`, url }).catch(() => {});
+      else navigator.clipboard?.writeText(url).then(() => toast("Ссылка скопирована"), () => prompt("Ссылка для сотрудников:", url));
+      break; }
+    case "approve": case "reject": { const s = S.staff.find((x) => x.id === t.dataset.id);
+      if (a === "reject" && !confirm(`Отклонить заявку «${s.name}»?`)) return;
+      t.disabled = true; const r = await callAdmin({ action: a, id: s.id }); t.disabled = false;
+      toast(r.error || (a === "approve" ? `${s.name}: доступ открыт` : `Заявка «${s.name}» отклонена`), !!r.error); reloadStaff(); break; }
+    case "wk": case "stsame": { const i = +t.closest(".work").dataset.i, w = S.edit.steps[i];
+      const add = a === "stsame" ? (i ? S.edit.steps[i - 1].who : load("rz_wk_last", [])).filter((n) => !w.who.includes(n)) : w.who.includes(t.dataset.n) ? [] : [t.dataset.n];
+      if (a === "wk" && !add.length) w.who.splice(w.who.indexOf(t.dataset.n), 1);
+      else if (add.includes(REP)) { w.who.length = 0; add.splice(0, add.length, REP); }   // представители -- без фамилий
+      else if (add.length) { const k = w.who.indexOf(REP); if (k >= 0) w.who.splice(k, 1); }
+      if (people([...w.who, ...add]).length > ST_CREW) return toast(`В тех. отчёте на одну работу — до ${ST_CREW} человек. Разделите на две работы.`, true);
+      w.who.push(...add);
+      const q = stBox(i).querySelector('[data-sf="wq"]'); if (add.length) q.value = "";
+      drawStWho(i); drawStRows(); break; }
+    case "stadd": { const p = S.edit.steps.at(-1);   // следующая работа -- с окончания предыдущей, те же люди
+      S.edit.steps.push({ t: "", from: p?.to || "", to: "", who: [...(p?.who || [])] }); drawSteps();
+      stBox(S.edit.steps.length - 1).querySelector("textarea").focus(); break; }
+    case "stdel": { const i = +t.closest(".work").dataset.i, w = S.edit.steps[i];
+      if ((w.t || w.who.length) && !confirm(`Убрать работу ${i + 1}${w.t ? " «" + w.t.slice(0, 40) + "»" : ""}?`)) return;
+      S.edit.steps.splice(i, 1); drawSteps(); break; }
+    case "stfrom": case "stto": setStTime(+t.closest(".work").dataset.i, a === "stfrom" ? "from" : "to", hhmm()); break;
+    case "tpick": openTp(t); break;
+    case "tpcancel": closeTp(); break;
+    case "tpdone": doneTp(); break;
+    case "tpclear": if (TP.f) setStTime(TP.i, TP.f, ""); else { $("#" + TP.id).value = ""; tShow(TP.id); } closeTp(); break;
+    case "stpick": { const i = +t.closest(".work").dataset.i, w = S.edit.steps[i], box = stBox(i), ta = box.querySelector("textarea");
+      w.t = w.t.trim() ? w.t.trim() + "; " + t.dataset.v : t.dataset.v; ta.value = w.t; fitTa(ta);
+      box.querySelector('[data-sf="q"]').value = ""; drawStSug(i); break; }
+    case "wkadd": { const name = fio($("#nwName").value), grp = $("#nwGrp").value;
+      if (!name) return toast(FIO_ERR, true);
+      const r = await sb.from("workers").upsert({ name, grp, active: true }, { onConflict: "name" }).select().single();
+      if (r.error) return toast(r.error.message, true);
+      S.workers = [...S.workers.filter((w) => w.name !== name), r.data].sort((a, b) => a.name.localeCompare(b.name, "ru"));
+      save("rz_workers", S.workers); $("#nwName").value = ""; toast(`${name} — в списке исполнителей`); render(); break; }
+    case "wkact": { const w = S.workers.find((x) => x.id === t.dataset.id);
+      const r = await sb.from("workers").update({ active: !w.active }).eq("id", w.id);
+      if (r.error) return toast(r.error.message, true);
+      w.active = !w.active; save("rz_workers", S.workers); drawWkAdmin(); break; }
+    case "logout": if (confirm("Выйти из приложения?")) { if (S.queue.length && !confirm(`Не отправлено записей: ${S.queue.length}. Они останутся на этом телефоне. Выйти?`)) return;
+      if (S.channel) sb.removeChannel(S.channel); if (S.pres) sb.removeChannel(S.pres); await pushOff(); await sb.auth.signOut(); localStorage.removeItem("rz_me"); S.past = null; showLogin(); } break;
+    case "tab": S.tab = t.dataset.tab; render(); scrollTo(0, 0); if (S.tab === "ana") loadAna(); break;
+    case "anaper": ANA.days = +t.dataset.v; ANA.sel = null; loadAna(); break;
+    case "anabar": ANA.sel = ANA.sel === +t.dataset.i ? null : +t.dataset.i; render(); break;
+    case "demolive": REMZONA_DEMO.setLive(!REMZONA_DEMO.live); render(); toast(REMZONA_DEMO.live ? "Имитация включена: коллеги будут делать записи" : "Имитация выключена"); break;
+    case "demoreset": if (confirm("Сбросить демо? Вымышленные данные создадутся заново, ваши записи пропадут.")) REMZONA_DEMO.reset(); break;
+    case "view": S.view = t.dataset.v; render(); scrollTo(0, 0); break;
+    case "pastpick": S.found = null; openPastPick(); break;
+    case "foundjob": openJob(t.dataset.id, S.found.jobs); break;
+    case "foundback": S.edit = null; openPastPick(); break;
+    case "pastgo": openPast(+t.dataset.st); break;
+    case "pastback": S.past = null; render(); scrollTo(0, 0); break;
+    case "pastarea": S.past.area = t.dataset.v; render(); break;
+    case "theme": save("rz_theme", isDark() ? "light" : "dark"); applyTheme(); break;
+    case "new": openJob(null); break;
+    case "job": openJob(t.dataset.id); break;
+    case "close": closeSheet(); break;
+    case "photo": { const p = findPhoto(t.dataset.id); if (p) viewPhoto(p); break; }
+    case "pclose": $("#pview").hidden = true; break;
+    case "psave": savePhoto(t.dataset.id); break;
+    case "pdel": delPhoto(t.dataset.id); break;
+    case "gar": S.edit.gar = t.dataset.gar; $("#fGar").value = S.edit.gar; drawGars(); break;
+    case "insp": { const e = S.edit, k = t.dataset.k; if (e.insp[k] === t.dataset.v) delete e.insp[k]; else e.insp[k] = t.dataset.v; drawInsp(); break; }
+    case "area": S.edit.area = t.dataset.v; document.querySelectorAll("#fArea .chip").forEach((c) => c.classList.toggle("on", c === t)); drawInsp();
+      if (S.edit.j || S.edit.kindSet) break;   // новая запись, вид не выбирали сами -- вид по вкладке
+      S.edit.kind = S.edit.area === "ТО" ? "ТО" : "Ремонт"; document.querySelectorAll("#fKind .chip").forEach((c) => c.classList.toggle("on", c.dataset.v === S.edit.kind)); drawTo(); break;
+    case "kind": S.edit.kind = t.dataset.v; S.edit.kindSet = true; document.querySelectorAll("#fKind .chip").forEach((c) => c.classList.toggle("on", c.dataset.v === S.edit.kind)); drawTo(); break;
+    case "to": { $("#more")?.setAttribute("open", ""); const w = S.edit.steps[0], ta = stBox(0).querySelector("textarea");
+      w.t = !/^ТО-\d/.test(w.t) ? (t.dataset.v + " " + w.t).trim() : w.t.replace(/^ТО-\d/, t.dataset.v); ta.value = w.t; break; }
+    case "now": $("#" + t.dataset.for).value = toInput(new Date().toISOString()); tShow(t.dataset.for); break;
+    case "wait": S.edit.wait = t.dataset.v; document.querySelectorAll("#fWait .chip").forEach((c) => c.classList.toggle("on", c === t));
+      $("#fWaitOther").hidden = S.edit.wait !== "Другое"; if (S.edit.wait === "Другое") $("#fWaitOther").focus();
+      if (!$("#fReady").value) { $("#fReady").value = toInput(new Date().toISOString()); tShow("fReady"); } break;
+    case "unready": S.edit.wait = ""; document.querySelectorAll("#fWait .chip").forEach((c) => c.classList.remove("on"));
+      $("#fWaitOther").hidden = true; $("#fReady").value = ""; tShow("fReady"); break;
+    case "savejob": saveJob(false); break;
+    case "exit": saveJob(true); break;
+    // удалить может администратор и механик -- свою запись (внёс по ошибке); чужую сервер не даст (jobs_before)
+    case "trash": openTrash(); break;
+    case "restore": restoreJob(t.dataset.id); break;
+    case "deljob": { const j = S.edit.j; if (!confirm(`Удалить запись по машине ${j.gar}? Она пропадёт у всех. Вернуть можно ${TRASH_DAYS} суток — «Недавно удалённые» внизу экрана.`)) return;
+      enqueue(j.client_id || null, { deleted: true }, false, j.id.startsWith("q:") ? null : j.id); closeSheet(); toast(`${j.gar}: запись удалена`); break; }
+    case "seen": S.seen = Date.now(); save("rz_seen", S.seen); document.title = "Ремзона"; render(); break;
+    case "notif": if (pushOk()) await pushOn(true).catch((e) => toast("Уведомления: " + (e.message || e), true));
+      else await Notification.requestPermission();
+      if (Notification.permission === "denied") toast("Уведомления запрещены в настройках телефона", true);
+      render(); break;
+    case "install": if (deferredInstall) { deferredInstall.prompt(); deferredInstall = null; render(); } break;
+    case "hintoff": save("rz_hint_off", true); render(); break;
+    case "role": S.nsRole = t.dataset.v; document.querySelectorAll("#nsRole .chip").forEach((c) => c.classList.toggle("on", c === t)); break;
+    case "genpin": $("#nsPin").value = randPin(); break;
+    case "addstaff": {
+      const name = fio($("#nsName").value), pin = $("#nsPin").value.trim(), role = document.querySelector("#nsRole .chip.on").dataset.v;
+      if (!name) return toast(FIO_ERR, true);
+      if (!/^\d{4}$/.test(pin)) return toast("PIN — ровно 4 цифры", true);
+      t.disabled = true; const r = await callAdmin({ action: "create", name, role, pin }); t.disabled = false;
+      if (r.error) return toast(r.error, true);
+      $("#nsName").value = ""; $("#nsPin").value = ""; S.nsRole = "";
+      toast(`${name} добавлен. PIN: ${pin}`); reloadStaff(); break;
+    }
+    case "pin": { const s = S.staff.find((x) => x.id === t.dataset.id); const pin = prompt(`Новый PIN для ${s.name} (4 цифры):`, randPin());
+      if (pin === null) return; if (!/^\d{4}$/.test(pin)) return toast("PIN — 4 цифры", true);
+      const r = await callAdmin({ action: "set_pin", id: s.id, pin }); toast(r.error || `PIN для ${s.name}: ${pin}`, !!r.error); break; }
+    case "active": { const r = await callAdmin({ action: "set_active", id: t.dataset.id, active: t.dataset.on === "1" });
+      if (r.error) toast(r.error, true); else if (!$("#sheet").hidden) closeSheet(); reloadStaff(); break; }
+    case "staff": openStaff(t.dataset.id); break;
+    case "serole": S.edit.role = t.dataset.v; document.querySelectorAll("#seRole .chip").forEach((c) => c.classList.toggle("on", c === t)); break;
+    case "savestaff": { const s = S.edit.staff, newSite = S.edit.site, typed = $("#seName").value.trim();
+      // прежнее имя не трогаем (правят роль / участок), новое -- только «Фамилия И.О.»
+      const name = typed === s.name ? typed : fio(typed);
+      if (!name) return toast(FIO_ERR, true);
+      t.disabled = true; const r = await callAdmin({ action: "update", id: s.id, name, role: S.edit.role, site: S.edit.site }); t.disabled = false;
+      if (r.error) return toast(r.error, true);
+      if (s.id === S.me.id) { S.me.name = name; save("rz_me", S.me); $("#whoName").textContent = name; }
+      toast(`${name}: сохранено`); closeSheet();
+      if (s.id === S.me.id && newSite !== S.me.site) await moveSite(newSite, true); else reloadStaff();
+      break; }
+    case "sesite": S.edit.site = t.dataset.v; document.querySelectorAll("#seSite .chip").forEach((c) => c.classList.toggle("on", c === t)); break;
+    case "ssite": L.site = t.dataset.v; document.querySelectorAll("#sSite button").forEach((c) => c.classList.toggle("on", c === t)); break;
+    case "site": openSite(); break;
+    case "chatmsg": openChatMsg(t.dataset.area); break;
+    case "chatcopy": copyChatMsg(); break;
+    case "chatshare": navigator.share({ text: $("#chatTxt").value }).catch(() => {}); break;
+    case "shift": pickShift(+t.dataset.v); break;
+    case "tmc": { const r = PRICE.rows[+t.dataset.i], qty = Math.max(1, parseInt($("#fTmcN").value, 10) || 1), ta = $("#fTmc");
+      ta.value = (ta.value.trim() ? ta.value.trim() + "\n" : "") + `${r.a} ${r.n} — ${qty} шт`;   // как окно ТМЦ книги
+      fitTa(ta);
+      $("#fTmcQ").value = ""; $("#fTmcN").value = "1"; $("#tmcList").innerHTML = ""; break; }
+    case "setsite": closeSheet(); if (t.dataset.v !== S.me.site) moveSite(t.dataset.v); break;
+    case "delstaff": { const s = S.edit.staff;
+      if (!confirm(`Удалить «${s.name}» насовсем? Войти он больше не сможет, восстановить нельзя.`)) return;
+      t.disabled = true; const r = await callAdmin({ action: "delete", id: s.id }); t.disabled = false;
+      if (r.error) return toast(r.error, true);
+      toast(`${s.name} удалён`); closeSheet(); reloadStaff(); break; }
+    case "car": { const m = S.machines.find((x) => x.gar === t.dataset.gar);
+      const r = await sb.from("machines").update({ active: !m.active }).eq("gar", m.gar);
+      if (r.error) return toast(r.error.message, true); m.active = !m.active; save("rz_machines", S.machines); render(); break; }
+    case "addcar": { const gar = $("#ncGar").value.trim(), model = $("#ncModel").value;
+      if (!/^\d{3,4}$/.test(gar)) return toast("Гаражный номер — 3–4 цифры", true);
+      const r = await sb.from("machines").upsert({ gar, model, active: true });
+      if (r.error) return toast(r.error.message, true);
+      const m = S.machines.find((x) => x.gar === gar); if (m) { m.active = true; m.model = model; } else S.machines.push({ gar, model, active: true });
+      S.machines.sort((x, y) => x.gar.localeCompare(y.gar, "ru", { numeric: true })); save("rz_machines", S.machines); $("#ncGar").value = ""; toast(`Машина ${gar} добавлена`); render(); break; }
+  }
+});
+document.addEventListener("keydown", (e) => {
+  if (!S.me && L.pick && /^\d$/.test(e.key) && L.pin.length < 4) { L.pin += e.key; renderLogin(); if (L.pin.length === 4) tryPin(); }
+  if (e.key === "Enter" && e.target.id === "lName") findName();
+  if (e.key === "Escape" && !$("#tpick").hidden) return closeTp();
+  if (e.key === "Escape" && !$("#pview").hidden) return void ($("#pview").hidden = true);
+  if (e.key === "Escape" && !$("#sheet").hidden) closeSheet();
+});
+// случайное касание мимо листа не закрывает заполняемую карточку (вписанное пропало бы); закрыть -- «Отмена»
+$("#sheet").addEventListener("click", (e) => { if (e.target.id === "sheet" && !S.edit?.can) closeSheet(); });
+// сбой в коде -- сообщение на экране, а не молчаливо несработавшая кнопка (ошибки связи показывают сами действия)
+const showBug = (e) => { const m = String(e?.message || e || ""); if (m && !netErr(e) && !/ResizeObserver|Script error/i.test(m)) toast("Ошибка: " + m, true); };
+window.addEventListener("error", (e) => showBug(e.error || e.message));
+window.addEventListener("unhandledrejection", (e) => showBug(e.reason));
+$("#tpick").addEventListener("click", (e) => { if (e.target.id === "tpick") closeTp(); });
+$("#pview").addEventListener("click", (e) => { if (e.target.id === "pview") e.target.hidden = true; });
+
+// связь появилась / приложение снова на экране -- отправить очередь и обновить
+async function refresh() {
+  if (!S.me || !navigator.onLine) return;
+  await retryLater(true);
+  try { await loadAll(); renderSoft(); } catch {}
+  loadPrice(); markSeen(); liveAgain(); checkUpdate();
+  // приложение подолгу открыто (ПК, телефон на зарядке): новая версия -- как только никто не заполняет форму и очередь пуста
+  const a = document.activeElement;
+  if (S.update && $("#sheet").hidden && !S.queue.length && !S.past && !a?.matches?.("input, select, textarea")) location.reload();
+}
+// онлайн-обновления: запуск без связи или канал оборвался -- подключить снова (иначе данные только раз в 2 минуты и «подключение…» в шапке)
+async function liveAgain() {
+  if (S.rt === "SUBSCRIBED" || S.rtTry) return;
+  S.rtTry = true;
+  try { const { data: { session } } = await sb.auth.getSession(); if (session && S.me) subscribe(); }
+  finally { setTimeout(() => { S.rtTry = false; }, 20000); }   // подключение идёт несколько секунд -- не начинать заново
+}
+// раз в час -- есть ли новая версия сайта: sw.js сравнит страницу и пришлёт «updated» (иначе приложение, которое не закрывают, остаётся старым)
+function checkUpdate() {
+  if (!navigator.serviceWorker?.controller || Date.now() - (S.updAt || 0) < 3600000) return;
+  S.updAt = Date.now(); fetch("index.html?check=1").catch(() => {});
+}
+// «был в приложении N мин назад» у администратора: при входе и каждом обновлении (раз в 2 мин, пока приложение на экране)
+function markSeen() { if (S.me && !document.hidden) sb.rpc("seen").then(() => {}, () => {}); }
+window.addEventListener("online", () => { renderConn(); refresh(); if (S.me) subscribe(); });
+window.addEventListener("offline", renderConn);
+// новая версия сайта скачана в фоне (sw.js) -- применяется, когда приложение снова открыли и форма не открыта
+navigator.serviceWorker?.addEventListener("message", (e) => { if (e.data?.type === "updated") S.update = true; });
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) return;
+  if (S.update && $("#sheet").hidden && !S.queue.length) return location.reload();
+  refresh();
+});
+setInterval(() => { if (S.me && $("#sheet").hidden) renderSoft(); }, 60000);   // длительность «на площадке»
+setInterval(refresh, 120000);
+sb.auth.onAuthStateChange((ev) => { if (ev === "SIGNED_OUT" && S.me) showLogin(); });
+
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+$("#outBtn").innerHTML = svg(ICON.out); applyTheme();
+enter();
+</script>
+</body>
+</html>
