@@ -389,6 +389,13 @@ details.more[open] summary::after { transform: rotate(-135deg); margin-top: 4px;
 .hb .bar i { display: block; height: 100%; background: var(--red); border-radius: 0 4px 4px 0; }
 .hb .val { font-variant-numeric: tabular-nums; color: var(--text); font-size: 14px; white-space: nowrap; }
 .anote { font-size: 13px; color: var(--muted); margin: 8px 2px 0; }
+.calc { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; align-items: end; }
+.calc label { font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
+.calc .inp { margin: 0; }
+.how { background: var(--card); border-radius: 12px; padding: 12px 14px; margin-top: 8px; font-size: 14px; }
+.how summary { cursor: pointer; color: var(--red); }
+.how p { margin: 8px 0 0; line-height: 1.45; }
+.kpi .v small { font-size: 15px; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -867,6 +874,24 @@ async function loadAna() {
 }
 const hrs = (ms) => ms / 3600000;
 const f1 = (x) => (Math.round(x * 10) / 10).toLocaleString("ru-RU");
+// Время машины на ремзоне делится на две части (как в методике учёта времени горной техники GMG и в определении КТГ):
+//   ремонт  -- от заезда до готовности (или до выезда, если «готова» не отмечали): машина неисправна, это простой ремзоны;
+//   ожидание -- от «готова» до выезда: машина исправна, но не уходит (нет водителя, распоряжение диспетчера…) -- организационный простой.
+// КТГ = 1 − часы ремонта / календарные часы парка. Исправная машина в ожидании -- технически готова (в КТГ не вычитается).
+// Парк по умолчанию -- машины, заезжавшие на ремзону за период; число можно поправить (сохраняется в телефоне).
+function anaCalc(js, from, to) {
+  const clip = (a, b) => Math.max(0, Math.min(b, to) - Math.max(a, from));
+  const per = new Map();   // машина -> { rep, wait, n, nRep, last }
+  for (const j of js) {
+    const s = +new Date(j.started_at), e = j.ended_at ? +new Date(j.ended_at) : to, r = j.ready_at ? Math.min(+new Date(j.ready_at), e) : e;
+    const o = per.get(j.gar) || { gar: j.gar, rep: 0, wait: 0, n: 0, reps: [] };
+    o.rep += clip(s, r); o.wait += clip(r, e); o.n++;
+    if (j.kind === "Ремонт") o.reps.push(j);
+    per.set(j.gar, o);
+  }
+  const cars = [...per.values()], rep = cars.reduce((a, c) => a + c.rep, 0), wait = cars.reduce((a, c) => a + c.wait, 0);
+  return { cars, rep, wait };
+}
 function anaHtml() {
   const per = `<div class="seg two" style="margin-top:10px">${[7, 30].map((d) => `<button class="${ANA.days === d ? "on" : ""}" data-act="anaper" data-v="${d}">${d} суток</button>`).join("")}</div>`;
   if (!ANA.rows) return `${per}<div class="empty" style="margin-top:12px">${esc(ANA.err || "Загрузка…")}</div>`;
@@ -874,54 +899,92 @@ function anaHtml() {
   for (const j of S.jobs.values()) if (new Date(j.started_at) >= ANA.at) mm.set(j.id, j);   // свежие изменения по Realtime
   const js = [...mm.values()].filter((j) => !j.deleted);
   if (!js.length) return `${per}<div class="empty" style="margin-top:12px">За период записей нет</div>`;
-  // время ремонта -- от заезда до готовности (или выезда); ожидание не по нашей вине -- от «готова» до выезда
-  const repair = (j) => new Date(j.ready_at || j.ended_at || now) - new Date(j.started_at);
-  const waitMs = (j) => j.ready_at ? Math.max(0, new Date(j.ended_at || now) - new Date(j.ready_at)) : 0;
-  const closed = js.filter((j) => j.ended_at);
-  const totalMs = js.reduce((a, j) => a + (new Date(j.ended_at || now) - new Date(j.started_at)), 0);
-  const waitAll = js.reduce((a, j) => a + waitMs(j), 0);
-  const cars = new Set(js.map((j) => j.gar)).size;
-  const rep = closed.filter((j) => j.kind === "Ремонт"), avgRep = rep.length ? hrs(rep.reduce((a, j) => a + repair(j), 0) / rep.length) : 0;
+  const C = anaCalc(js, ANA.at, now), saved = load("rz_ana", {});
+  const fleet = Math.max(1, +saved["fleet_" + S.me.site] || C.cars.length), cal = fleet * (now - ANA.at);
+  const ktg = 1 - C.rep / cal, ktgOld = 1 - (C.rep + C.wait) / cal, pct = (x) => `${f1(x * 100)}<small>%</small>`;
   const kpi = (v, l) => `<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`;
-  let h = `${per}<h2>Итоги за ${ANA.days} суток · ${esc(S.me.site)}</h2><div class="kpis">
-    ${kpi(js.length, "заездов на ремзону")}${kpi(cars, "единиц техники обслужено")}
-    ${kpi(`${f1(avgRep)} <small>ч</small>`, "в среднем на ремонт")}
-    ${kpi(`${f1(hrs(waitAll))} <small>ч</small>`, `простой не по нашей вине · ${totalMs ? Math.round(waitAll / totalMs * 100) : 0}% времени`)}</div>`;
+  let h = `${per}<h2>Готовность парка · ${ANA.days} суток · ${esc(S.me.site)}</h2><div class="kpis">
+    ${kpi(pct(ktg), "КТГ по методике: ожидание исправной машины не вычитается")}
+    ${kpi(pct(ktgOld), "КТГ, если ожидание записывать ремзоне")}
+    ${kpi(`+${f1((ktg - ktgOld) * 100)} <small>п.п.</small>`, "разница: столько готовности терялось в учёте")}
+    ${kpi(`${f1(hrs(C.wait))} <small>ч</small>`, "исправная техника ждала не по вине ремзоны")}</div>
+    <div class="chart" style="margin-top:8px"><div class="calc"><label>Машин в парке участка
+      <input class="inp" id="anaFleet" inputmode="numeric" value="${fleet}"></label><span class="anote" style="margin:0">по умолчанию — заезжавшие на ремзону за период (${C.cars.length})</span></div></div>`;
 
   // заезды по суткам
   const days = [], d0 = new Date(ANA.at);
-  for (let i = 0; i < ANA.days + 1; i++) { const d = new Date(d0); d.setDate(d.getDate() + i); if (d > now) break; days.push({ d, n: 0, rep: 0, other: 0 }); }
+  for (let i = 0; i < ANA.days + 1; i++) { const d = new Date(d0); d.setDate(d.getDate() + i); if (d > now) break; days.push({ d, n: 0 }); }
   for (const j of js) { const k = Math.floor((new Date(j.started_at) - d0) / 86400000); const x = days[Math.min(Math.max(k, 0), days.length - 1)]; if (x) x.n++; }
   const mx = Math.max(1, ...days.map((x) => x.n)), sel = ANA.sel != null ? days[ANA.sel] : null;
-  const avgDay = js.length / days.length;
-  h += `<h2>Заезды по суткам</h2><div class="chart"><div class="cap">${sel ? `${dayTitleTxt(sel.d)}: <b>${sel.n}</b> заездов` : `в среднем ${f1(avgDay)} в сутки, максимум ${mx} — нажмите на столбик`}</div>
+  h += `<h2>Заезды по суткам · ${js.length}</h2><div class="chart"><div class="cap">${sel ? `${dayTitleTxt(sel.d)}: <b>${sel.n}</b> заездов` : `в среднем ${f1(js.length / days.length)} в сутки, максимум ${mx} — нажмите на столбик`}</div>
     <div class="cols" role="img" aria-label="Заезды по суткам">${days.map((x, i) => `<button class="${ANA.sel === i ? "on" : ""}" data-act="anabar" data-i="${i}" title="${dm(x.d)}: ${x.n}"><i style="height:${x.n / mx * 100}%"></i></button>`).join("")}</div>
     <div class="axis"><span>${dm(days[0].d)}</span><span>${dm(days[days.length - 1].d)}</span></div></div>`;
 
-  // горизонтальные полосы: подпись, полоса, значение
   const bars = (items, fmtV) => { const m = Math.max(...items.map((x) => x.v), 0.0001);
     return items.map((x) => `<div class="hb"><span class="t" title="${esc(x.t + (x.m ? " · " + x.m : ""))}">${esc(x.t)}${x.m ? ` <small>${esc(x.m)}</small>` : ""}</span><span class="bar"><i style="width:${Math.max(2, x.v / m * 100)}%"></i></span><span class="val">${fmtV(x)}</span></div>`).join(""); };
 
-  const kinds = KINDS.map((k) => { const xs = closed.filter((j) => j.kind === k); return { t: k, n: xs.length, v: xs.length ? hrs(xs.reduce((a, j) => a + repair(j), 0) / xs.length) : 0 }; }).filter((x) => x.n);
-  h += `<h2>Среднее время работ по видам</h2><div class="chart">${bars(kinds, (x) => `${f1(x.v)} ч · ${x.n}`)}<div class="anote">часы от заезда до готовности; справа — число закрытых записей</div></div>`;
-
+  // ожидание по причинам
   const reasons = new Map();
-  for (const j of js) if (j.ready_at) { const r = j.wait_reason || "Другое"; const o = reasons.get(r) || { t: r, v: 0, n: 0 }; o.v += hrs(waitMs(j)); o.n++; reasons.set(r, o); }
+  for (const j of js) if (j.ready_at) {
+    const r = j.wait_reason || "Другое", e = j.ended_at ? +new Date(j.ended_at) : now, w = Math.max(0, Math.min(e, now) - Math.max(+new Date(j.ready_at), ANA.at));
+    const o = reasons.get(r) || { t: r, v: 0, n: 0 }; o.v += hrs(w); o.n++; reasons.set(r, o);
+  }
   const rs = [...reasons.values()].sort((a, b) => b.v - a.v);
-  h += `<h2>Готова, но ждёт — не по нашей вине</h2><div class="chart">${rs.length ? bars(rs, (x) => `${f1(x.v)} ч · ${x.n}`) : `<div class="cap">За период ожиданий не отмечено</div>`}
-    <div class="anote">машина исправна, но не уходит с площадки: эти часы раньше записывались в простой ремзоны</div></div>`;
+  h += `<h2>Готова, но ждёт — по причинам</h2><div class="chart">${rs.length ? bars(rs, (x) => `${f1(x.v)} ч · ${x.n}`) : `<div class="cap">За период ожиданий не отмечено. Отмечайте «Готова к выезду» в карточке — иначе это время считается ремонтом</div>`}</div>`;
 
-  const byCar = new Map();
-  for (const j of js) { const o = byCar.get(j.gar) || { t: j.gar, v: 0, n: 0 }; o.v += hrs(repair(j)); o.n++; byCar.set(j.gar, o); }
-  const top = [...byCar.values()].sort((a, b) => b.v - a.v).slice(0, 6);
-  top.forEach((x) => { const m = S.machines.find((c) => c.gar === x.t); x.m = m?.model || ""; });
-  h += `<h2>Больше всего часов в ремонте</h2><div class="chart">${bars(top, (x) => `${f1(x.v)} ч · ${x.n} заезд.`)}<div class="anote">кандидаты на углублённую диагностику</div></div>`;
+  // калькулятор: часы ожидания -> недовезённые тонны -> рубли (свои цифры предприятия)
+  const tph = +saved.tph || 0, rub = +saved.rub || 0;
+  h += `<h2>Цена ожидания</h2><div class="chart" id="anaCalc"><div class="calc">
+    <label>Тонн в час на машину<input class="inp" id="anaTph" inputmode="decimal" value="${tph || ""}" placeholder="например, 250"></label>
+    <label>₽ за тонну (маржа)<input class="inp" id="anaRub" inputmode="decimal" value="${rub || ""}" placeholder="например, 120"></label></div>
+    <div class="cap" id="anaOut" style="margin-top:8px"></div>
+    <div class="anote">${f1(hrs(C.wait))} ч ожидания × тонн в час × ₽ за тонну. Цифры — ваши, хранятся только в этом телефоне</div></div>`;
+
+  // время работ по видам
+  const closed = js.filter((j) => j.ended_at), repair = (j) => new Date(j.ready_at || j.ended_at) - new Date(j.started_at);
+  const kinds = KINDS.map((k) => { const xs = closed.filter((j) => j.kind === k); return { t: k, n: xs.length, v: xs.length ? hrs(xs.reduce((a, j) => a + repair(j), 0) / xs.length) : 0 }; }).filter((x) => x.n);
+  h += `<h2>Среднее время работ по видам</h2><div class="chart">${bars(kinds, (x) => `${f1(x.v)} ч · ${x.n}`)}<div class="anote">от заезда до готовности; справа — число закрытых записей</div></div>`;
+
+  // машины с низшим КТГ
+  const span = now - ANA.at, model = (g) => S.machines.find((c) => c.gar === g)?.model || "";
+  const worst = [...C.cars].sort((a, b) => b.rep - a.rep).slice(0, 6).map((c) => ({ t: c.gar, m: model(c.gar), v: hrs(c.rep), k: 1 - c.rep / span, n: c.n }));
+  h += `<h2>Меньше всего готовности</h2><div class="chart">${bars(worst, (x) => `КТГ ${Math.round(x.k * 100)}% · ${f1(x.v)} ч`)}<div class="anote">часы в ремонте за период; КТГ машины — доля времени, когда она была исправна</div></div>`;
+
+  // повторные заезды: машина снова в ремонте в течение 72 ч после выезда -- признак незакрытой причины
+  const again = [];
+  for (const c of C.cars) {
+    const rs2 = c.reps.slice().sort((a, b) => new Date(a.started_at) - new Date(b.started_at));
+    let k = 0; for (let i = 1; i < rs2.length; i++) { const prev = rs2[i - 1]; if (prev.ended_at && new Date(rs2[i].started_at) - new Date(prev.ended_at) < 72 * 3600000) k++; }
+    if (k) again.push({ t: c.gar, m: model(c.gar), v: k, last: rs2[rs2.length - 1] });
+  }
+  again.sort((a, b) => b.v - a.v);
+  h += `<h2>Вернулись в ремонт за 72 ч · ${again.length}</h2><div class="chart">${again.length ? again.slice(0, 6).map((x) =>
+    `<div class="hb"><span class="t">${esc(x.t)} <small>${esc(x.m)}</small></span><span class="val" style="grid-column:2/4;text-align:right;white-space:normal;color:var(--muted)">${x.v} повт. · ${esc(x.last.fault || "")}</span></div>`).join("")
+    : `<div class="cap">Повторных ремонтов нет</div>`}<div class="anote">машина вернулась в ремонт меньше чем через 72 ч после выезда — кандидат на углублённую диагностику</div></div>`;
 
   const night = js.filter((j) => shiftOf(new Date(j.started_at)).n === 1).length;
   const xl = js.filter((j) => j.site === EXCEL_SITE), inXl = xl.filter((j) => j.imported_rev > 0 && j.imported_rev >= j.rev).length;
   h += `<h2>Смены и Excel-книга</h2><div class="kpis">${kpi(night, "заездов ночью")}${kpi(js.length - night, "заездов днём")}
-    ${S.me.site === EXCEL_SITE ? kpi(`${inXl} <small>из ${xl.length}</small>`, "перенесено в Excel-книгу") : ""}${kpi(js.filter((j) => !j.ended_at).length, "сейчас на ремзоне")}</div>`;
+    ${S.me.site === EXCEL_SITE ? kpi(`${inXl} <small>из ${xl.length}</small>`, "перенесено в Excel-книгу") : ""}${kpi(js.filter((j) => !j.ended_at).length, "сейчас на ремзоне")}</div>
+    <details class="how"><summary>Как считается</summary><p><b>КТГ</b> (коэффициент технической готовности) = 1 − часы ремонта ÷ (машин в парке × часов в периоде).
+    <b>Ремонт</b> — от заезда до отметки «Готова к выезду», а если её нет — до выезда. <b>Ожидание</b> — от «Готова» до выезда: машина исправна,
+    поэтому по определению КТГ она технически готова. Так же разделяет время отраслевая методика учёта времени горной техники (GMG Time Usage Model):
+    простой в ремонте и ожидание исправной машины — разные категории.</p></details>`;
+  ANA.wait = C.wait;
   return h;
+}
+function anaBind() {
+  const out = () => {
+    const tph = parseFloat(($("#anaTph").value || "").replace(",", ".")) || 0, rub = parseFloat(($("#anaRub").value || "").replace(",", ".")) || 0;
+    const s = load("rz_ana", {}); s.tph = tph; s.rub = rub; save("rz_ana", s);
+    const t = hrs(ANA.wait || 0) * tph;
+    $("#anaOut").innerHTML = tph && rub ? `Недовезено ≈ <b>${Math.round(t).toLocaleString("ru-RU")} т</b> · ≈ <b>${Math.round(t * rub).toLocaleString("ru-RU")} ₽</b> за ${ANA.days} суток`
+      : "Введите обе цифры — посчитаю, во что обошлось ожидание";
+  };
+  $("#anaTph").addEventListener("input", out); $("#anaRub").addEventListener("input", out); out();
+  $("#anaFleet").addEventListener("change", (e) => {
+    const s = load("rz_ana", {}), v = parseInt(e.target.value, 10); s["fleet_" + S.me.site] = v > 0 ? v : 0; save("rz_ana", s); render();
+  });
 }
 const dayTitleTxt = (d) => `${dm(d)}, ${["вс", "пн", "вт", "ср", "чт", "пт", "сб"][d.getDay()]}`;
 
@@ -1089,6 +1152,7 @@ function render() {
   $("#app").innerHTML = demoBar() + h + CREDIT;
   keep.forEach(([id, v]) => { const el = document.getElementById(id); if (el?.closest("#app")) el.value = v; });
   if ($("#nwQ")) { $("#nwQ").addEventListener("input", drawWkAdmin); drawWkAdmin(); }
+  if ($("#anaCalc")) anaBind();
   renderConn(); hideSplash();
 }
 // ---------- недавно удалённые (03.11.2026, просьба пользователя: удалили заезд по ошибке -- вернуть): сервер хранит 30 суток ----------
