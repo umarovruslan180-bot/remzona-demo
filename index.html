@@ -384,7 +384,7 @@ details.more[open] summary::after { transform: rotate(-135deg); margin-top: 4px;
 .axis { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
 .hb { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(48px, 1fr) auto; align-items: center; gap: 4px 10px; font-size: 15px; padding: 5px 0; }
 .hb .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hb .t small { color: var(--muted); font-size: 12px; }
+.hb .t small { display: block; color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
 .hb .bar { height: 10px; border-radius: 0 4px 4px 0; background: var(--chip); overflow: hidden; }
 .hb .bar i { display: block; height: 100%; background: var(--red); border-radius: 0 4px 4px 0; }
 .hb .val { font-variant-numeric: tabular-nums; color: var(--text); font-size: 14px; white-space: nowrap; }
